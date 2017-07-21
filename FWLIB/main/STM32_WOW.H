@@ -203,6 +203,15 @@
 #ifdef PM004V10
 	#include "PM004V10.H"
 #endif
+//*********************************USBTEST_RS485TOUSART*********************************//
+#ifdef USBTEST_RS485TOUSART
+	#include "USBTEST_RS485TOUSART.H"
+#endif
+//*********************************PC001V22*********************************//
+#ifdef PC001V22
+	#include "PC001V22.H"
+#endif
+
 
 
 

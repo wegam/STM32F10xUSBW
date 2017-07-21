@@ -238,6 +238,16 @@ void WOW_Configuration(void)
 	PM004V10_Configuration();
 #endif
 
+//*********************************USBTEST_RS485TOUSART*********************************//
+#ifdef USBTEST_RS485TOUSART
+	USBTEST_RS485TOUSART_Configuration();
+#endif
+
+//*********************************PC001V22*********************************//
+#ifdef PC001V22
+	PC001V22_Configuration();
+#endif
+
 
 
 
@@ -460,6 +470,16 @@ void WOW_Server(void)
 //*********************************PM004V10*********************************//
 #ifdef PM004V10
 	PM004V10_Server();
+#endif
+
+//*********************************USBTEST_RS485TOUSART*********************************//
+#ifdef USBTEST_RS485TOUSART
+	USBTEST_RS485TOUSART_Server();
+#endif
+
+//*********************************PC001V22*********************************//
+#ifdef PC001V22
+	PC001V22_Server();
 #endif
 
 

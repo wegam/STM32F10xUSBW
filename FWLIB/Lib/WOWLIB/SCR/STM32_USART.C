@@ -1212,7 +1212,8 @@ u16 USART_DMASend(
 *******************************************************************************/
 void RS485_TX_EN(RS485_TypeDef *RS485_Info)
 {
-	RS485_Info->RS485_CTL_PORT->BSRR		= RS485_Info->RS485_CTL_Pin;
+//	RS485_Info->RS485_CTL_PORT->BSRR		= RS485_Info->RS485_CTL_Pin;
+	GPIO_SetBits(RS485_Info->RS485_CTL_PORT,RS485_Info->RS485_CTL_Pin);
 }
 /*******************************************************************************
 *函数名			:	RS485_RX_EN
@@ -1414,7 +1415,8 @@ void	RS485_DMA_ConfigurationNR(
 )	//USART_DMA配置--查询方式，不开中断
 {
 	USART_DMA_ConfigurationNR	(RS485_Info->USARTx,USART_BaudRate,RXDBuffer,BufferSize);		//USART_DMA配置--查询方式，不开中断
-	GPIO_Configuration_APP50	(RS485_Info->RS485_CTL_PORT,RS485_Info->RS485_CTL_Pin);			//将GPIO相应管脚配置为APP(复用推挽)输出模式，最大速度50MHz----V20170605
+	GPIO_Configuration_OPP50	(RS485_Info->RS485_CTL_PORT,RS485_Info->RS485_CTL_Pin);			//将GPIO相应管脚配置为APP(复用推挽)输出模式，最大速度50MHz----V20170605
+	RS485_Info->RS485_CTL_PORT->BRR 		= RS485_Info->RS485_CTL_Pin;				//RS485接收开启
 }
 /*******************************************************************************
 *函数名			:	RS485_ReadBufferIDLE
