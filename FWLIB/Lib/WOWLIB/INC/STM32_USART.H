@@ -61,7 +61,7 @@ u16 					USART_DMASend							(USART_TypeDef* USARTx,u32 *tx_buffer,u16 BufferSiz
 
 //---------------------------RS485
 //*****************RS485初始化---使用DMA空闲接收，标志查询方式
-void 					RS485_DMA_ConfigurationNR	(RS485_TypeDef *RS485_Info,u32 USART_BaudRate,u32 *RxdBuffer,u32 BufferSize);	//USART_DMA配置--查询方式，不开中断
+void 					RS485_DMA_ConfigurationNR	(RS485_TypeDef *RS485_Info,u32 USART_BaudRate,u32 *RxdBuffer,u32 BufferSize);	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 
 
 
@@ -72,9 +72,7 @@ u16						RS485_ReadBufferIDLE			(RS485_TypeDef *RS485_Info,u32 *RevBuffer,u32 *R
 u16 					RS485_DMAPrintf						(RS485_TypeDef *RS485_Info,const char *format,...);					//自定义printf串口DMA发送程序,后边的省略号就是可变参数
 u16 					RS485_DMASend							(RS485_TypeDef *RS485_Info,u32 *tx_buffer,u16 BufferSize);	//RS485-DMA发送程序
 
-//*****************RS485收发控制
-void RS485_TX_EN(RS485_TypeDef *RS485_Info);	//发使能
-u8 RS485_RX_EN(RS485_TypeDef *RS485_Info);		//收使能，已经设置为接收状态返回1，否则返回0
+
 
 
 void USART_RX_Server(void);		//串口接收服务程序	

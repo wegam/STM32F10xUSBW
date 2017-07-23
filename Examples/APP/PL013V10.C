@@ -100,6 +100,15 @@
 ################################################################################
 ###############################################################################*/
 
+
+#define PL013V10_CANTEST
+
+#ifndef	PL013V10_CANTEST
+	#define PL013V10_485TEST
+#endif
+
+//#define PL013V10_Master
+
 #define RS485TX	0
 #define RS485RX	1
 #define PC004V10_RS4851_CTL(n)	if(n==RS485RX){GPIO_ResetBits(GPIOA,GPIO_Pin_1);}else{GPIO_SetBits(GPIOA,GPIO_Pin_1);}
@@ -112,10 +121,11 @@
 //************485通讯数据
 //#define	
 
-#define	PC004V10_BufferSize 32															//DMA1缓冲大小
+#define RxBufferSize	5
 
-u8 PC004V10_Buffer[PC004V10_BufferSize]={0};								//RS485缓存
-u8 PC004V10_Num[13]={0};																		//接收到的数据
+u8 RevBuffer[RxBufferSize]={0};
+u8 RxdBuffer[RxBufferSize]={0};
+u8 TxdBuffer[RxBufferSize]={0};
 
 u8 ID_ARR[8][8]={0,0};			//存储已连接数码管ID列表
 u8 ON_line[8][8]={0,0};			//对应ID列表标志位，0--无此ID，1--有对应ID
@@ -129,11 +139,16 @@ u16 data=0;
 
 u8 Self_Dsp=0;							//拔码开关为0时，自检测试显示标识变量
 
+u16 DSPNUM=0;
+u8 CtxNUM=0;
+
 CanRxMsg RxMessage;
 
 CD4511_Pindef CD4511_Pin1;		//第一位
 CD4511_Pindef CD4511_Pin2;		//第二位
 CD4511_Pindef CD4511_Pin3;		//第三位
+
+RS485_TypeDef RS485_2;
 
 /*******************************************************************************
 * 函数名		:	
@@ -157,7 +172,7 @@ void PL013V10_Configuration(void)
 	
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);						//PWM设定-20161127版本
 	
-
+#ifdef	PL013V10_CANTEST
 	
 	CAN_Configuration_NR(10000);									//CAN配置---标志位查询方式，不开中断
 	
@@ -166,13 +181,12 @@ void PL013V10_Configuration(void)
 //	CAN_FilterInitConfiguration(0,0X000003FF,0X0000);			//CAN滤波器配置
 	CAN_FilterInitConfiguration_StdData(0,0X015,0X015);	//CAN滤波器配置---标准数据帧模式
 //	CAN_FilterInitConfiguration(1,0X0000,0X0000);			//CAN滤波器配置
-	
+#endif
 
-	
-//	PC004V10_Num[8]=1;
-//	PC004V10_Num[9]=0;
-//	PC004V10_Num[11]=0;
-//	PC004V10_Num[12]=0;
+
+#ifdef	PL013V10_485TEST
+	RS485_DMA_ConfigurationNR	(&RS485_2,19200,(u32*)RxdBuffer,RxBufferSize);	//USART_DMA配置--查询方式，不开中断
+#endif	
 
 	SysTick_Configuration(1000);							//系统嘀嗒时钟配置72MHz,单位为uS
 }
@@ -189,42 +203,45 @@ void PL013V10_Server(void)
 	u8 status=0;	
 	
 	IWDG_Feed();								//独立看门狗喂狗	
-	
-//	SYSTime++;
-//		
-//	if(SYSTime>=100)
-//		SYSTime=0;
-//	//**************检查通讯标志位，查看是否为通讯中断，如果是，则此次时间增量无效
-
-//	if(status&&(SYSTime>0))
-//		SYSTime--;	
-//	
-//	
-//	//**************检测设备ID有无变化，有就更新
-//	if(SYSTime%500==0)
-//	{
-//		if(SwitchID!=PL013V10_GetSwitchID())
-//		{
-//			SwitchID=PL013V10_GetSwitchID();
-//			PC004V10_Buffer[5]=0x01;							//获取ID指令0x01
-//			PL013V10_CAN_COMMAD();					//CAN发送命令函数，地址，命令类型，数据--时间同步--发送获取D命令
-//		}
-//	}
-//	if(SwitchID==0)
-//	{
-
-//	}
-	PL013V10_CAN_RX();									//主要接收数码管板地址，
-	++Time;	
-	if(Time>=50)
+	Time++;	
+	if(Time>=500)
 	{
 		Time=0;	
-//		++data;		
+		data++;	
+		TxdBuffer[0]++;	
 	}
-//	if(data>999)
-//		data=0;
-	PL013V10_DISPALY(Time%3,data);
-//	PL013V10_DISPALY(0,123);
+	if(data>999)
+		data=0;
+	if(TxdBuffer[0]>999)
+		TxdBuffer[0]=0;
+
+#ifdef	PL013V10_CANTEST
+	#ifdef PL013V10_Master				//主机---发送
+		PL013V10_DISPALY(Time%3,CtxNUM);
+		if(Time==0)
+			PL013V10_CAN_TX();									//CAN发送数据，地址，命令类型，数据
+	#else													//从机---接收
+		PL013V10_CAN_RX();									//主要接收数码管板地址
+		PL013V10_DISPALY(Time%3,DSPNUM);
+	#endif		
+#endif
+		
+#ifdef	PL013V10_485TEST
+	#ifdef PL013V10_Master
+		PL013V10_DISPALY(Time%3,TxdBuffer[0]);
+		if(Time==0)
+				RS485_DMASend(&RS485_2,(u32*)TxdBuffer,RxBufferSize);	//RS485-DMA发送程序
+	#else
+		RS485_ReadBufferIDLE(&RS485_2,(u32*)RevBuffer,(u32*)RxdBuffer);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+		PL013V10_DISPALY(Time%3,RevBuffer[0]);
+	#endif
+#endif
+	
+#ifndef	PL013V10_CANTEST
+		#ifndef	PL013V10_485TEST
+			PL013V10_DISPALY(Time%3,data);
+		#endif
+#endif
 }
 /*******************************************************************************
 * 函数名			:	function
@@ -307,7 +324,9 @@ void PL013V10_PinSet(void)
 	
 	CD4511_PinConf(&CD4511_Pin3);
 
-
+	RS485_2.USARTx=USART2;
+	RS485_2.RS485_CTL_PORT=GPIOA;
+	RS485_2.RS485_CTL_Pin=GPIO_Pin_1;
 }
 
 /*******************************************************************************
@@ -348,16 +367,18 @@ void PL013V10_CAN_RX(void)									//主要接收数码管板地址，
 		data=RxMessage.Data[0];
 //		PL013V10_DISPALY(1,RxMessage.Data[0]);
 //		PL013V10_DISPALY(0,2);
-		if(RxMessage.DLC==8&&RxMessage.Data[0]==0XAA)
+		if(RxMessage.DLC==8)
 		{
-			ID_Temp=RxMessage.StdId;
-			ID_ARR[ID_Temp/10][ID_Temp%10]=ID_Temp;
-			ON_line[ID_Temp/10][ID_Temp%10]=1;
+				DSPNUM=RxMessage.Data[0];
+
+//			ID_Temp=RxMessage.StdId;
+//			ID_ARR[ID_Temp/10][ID_Temp%10]=ID_Temp;
+//			ON_line[ID_Temp/10][ID_Temp%10]=1;
 			
 		}
 		if(RxMessage.DLC==4)
 		{
-			PL013V10_DISPALY(0,RxMessage.Data[3]);	
+//			PL013V10_DISPALY(0,RxMessage.Data[3]);	
 //			PL013V10_DISPALY(0,3);
 		}
 		else
@@ -382,15 +403,18 @@ void PL013V10_CAN_TX(void)					//CAN发送数据，地址，命令类型，数据
 	
 	u8	TransmitMailbox = 0;
 	u32	i;
+	CtxNUM++;
+	if(CtxNUM>=255)
+		CtxNUM=0;
 
-	TxMessage.StdId=CAN_ID;					//单元地址
+	TxMessage.StdId=0X015;					//单元地址
 //	TxMessage.ExtId=0XFF;
 	TxMessage.RTR=CAN_RTR_DATA;			//数据帧
 	TxMessage.IDE=CAN_ID_STD;				//使用标准标识符
 	TxMessage.DLC=8;
-	TxMessage.Data[0]=CAN_Command;	//命令类型
-	TxMessage.Data[1]=Data_H;				//数据高位
-	TxMessage.Data[2]=Data_L;				//数据低位
+	TxMessage.Data[0]=CtxNUM;			//命令类型
+	TxMessage.Data[1]=0x01;				//数据高位
+	TxMessage.Data[2]=0x02;				//数据低位
 	TxMessage.Data[3]=0x03;
 	TxMessage.Data[4]=0x04;
 	TxMessage.Data[5]=0x05;
@@ -425,12 +449,12 @@ void PL013V10_CAN_COMMAD(void)					//CAN发送命令函数，地址，命令类型，数据--时间
 	u8	TransmitMailbox = 0;
 	u32	i;
 
-	TxMessage.StdId=0X3FF;								//单元地址
+	TxMessage.StdId=0X015;								//单元地址
 //	TxMessage.ExtId=0XFF;
 	TxMessage.RTR=CAN_RTR_DATA;						//数据帧
 	TxMessage.IDE=CAN_ID_STD;							//使用标准标识符
 	TxMessage.DLC=3;
-	TxMessage.Data[0]=PC004V10_Buffer[5];	//命令类型
+	TxMessage.Data[0]=0x01;	//命令类型
 	TxMessage.Data[1]=0x00;						//数据高位
 	TxMessage.Data[2]=0x00;						//数据低位
 //	TxMessage.Data[3]=0x00;
@@ -451,7 +475,6 @@ void PL013V10_CAN_COMMAD(void)					//CAN发送命令函数，地址，命令类型，数据--时间
 	{
 		i++;
 	}
-	memset(PC004V10_Buffer,0,PC004V10_BufferSize);	//初始化缓冲
 }
 
 /*******************************************************************************
@@ -527,21 +550,21 @@ void PL013V10_DISPALY(u8 wei,u16 num)
 	CD4511_DisplayOFF(&CD4511_Pin3);			//关闭显示---关NPN三极管
 	if(wei==2)
 	{
-		if(num>100)
-		{
+//		if(num>100)
+//		{
 			CD4511_WriteData(&CD4511_Pin3,num/100);
-		}
+//		}
 	}
 	else if(wei==1)
 	{
-		if(num>=10||num>=100)
-		{
-			if(num>=100)
-			{
+//		if(num>=10||num>=100)
+//		{
+//			if(num>=100)
+//			{
 				num=num%100;
-			}
+//			}
 			CD4511_WriteData(&CD4511_Pin2,num/10);
-		}
+//		}
 	}
 	else
 	{

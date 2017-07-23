@@ -97,7 +97,7 @@ void PL010V13_Server(void)
 			{				
 				testADC=CS5530_ADC_Value;
 				bacADC=CS5530_ADC_Value;
-				R61509V_Clean(R61509V_BLACK);			//清除屏幕函数--蓝白	
+//				R61509V_Clean(R61509V_BLACK);			//清除屏幕函数--蓝白	
 //				R61509V_DrawLine(0,120,400,120,0X5458);						//AB 两个坐标画一条直线				
 //				R61509V_DrawLine(0,230,400,230,0X5458);						//AB 两个坐标画一条直线
 //				R61509V_DrawLine(0,220,400,220,0X5458);						//AB 两个坐标画一条直线
@@ -184,7 +184,7 @@ void PL010V13_Server(void)
 			ADC_doty=(R61509V_H-ADC_doty+1);
 			
 //			R61509V_DrawDot(ADC_dotx,ADC_doty,0X07FF);			//画点
-			R61509V_DrawLine(ADC_dotx1,ADC_doty1,ADC_dotx,ADC_doty,R61509V_BRRED);						//AB 两个坐标画一条直线
+//			R61509V_DrawLine(ADC_dotx1,ADC_doty1,ADC_dotx,ADC_doty,R61509V_BRRED);						//AB 两个坐标画一条直线
 			ADC_dotx1=ADC_dotx;
 			ADC_doty1=ADC_doty;
 		}

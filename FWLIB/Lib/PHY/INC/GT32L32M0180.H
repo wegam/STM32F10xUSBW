@@ -69,17 +69,19 @@
 
 	//____________GPIO¿ØÖÆ¶¨Òå
 
-	//____________SPI_CS¿ØÖÆ¶¨Òå
-		#define GT32L32_CS_DisSelect				GPIO_SetBits(GT32L32_CS_PORT,				GT32L32_CS_PIN)			//È¡ÏûÆ¬Ñ¡
-		#define GT32L32_CS_Select						GPIO_ResetBits(GT32L32_CS_PORT,			GT32L32_CS_PIN)		//Ê¹ÄÜÆ¬Ñ¡
-	//____________SPI_CLK/SCLK¿ØÖÆ¶¨Òå
-		#define GT32L32_CLK_L								GPIO_ResetBits(GT32L32_CLK_PORT,	GT32L32_CLK_PIN)		//µÍµçÆ½
-		#define GT32L32_CLK_H								GPIO_SetBits(GT32L32_CLK_PORT,		GT32L32_CLK_PIN)			//¸ßµçÆ½
-	//____________SPI_MISO/SO¿ØÖÆ¶¨Òå
-		#define GT32L32_SO									GPIO_ReadOutputDataBit(GT32L32_MISO_PORT,GT32L32_MISO_PIN)
-	//____________SPI_MOSI/SI¿ØÖÆ¶¨Òå
-		#define GT32L32_SI_L								GPIO_ResetBits(GT32L32_MOSI_PORT,	GT32L32_MOSI_PIN)		//µÍµçÆ½
-		#define GT32L32_SI_H								GPIO_SetBits(GT32L32_MOSI_PORT,		GT32L32_MOSI_PIN)			//¸ßµçÆ½
+
+		
+//		//____________SPI_CS¿ØÖÆ¶¨Òå
+//		#define GT32L32_CS_DisSelect				GPIO_SetBits(GT32L32_CS_PORT,				GT32L32_CS_PIN)			//È¡ÏûÆ¬Ñ¡
+//		#define GT32L32_CS_Select						GPIO_ResetBits(GT32L32_CS_PORT,			GT32L32_CS_PIN)		//Ê¹ÄÜÆ¬Ñ¡
+//	//____________SPI_CLK/SCLK¿ØÖÆ¶¨Òå
+//		#define GT32L32_CLK_L								GPIO_ResetBits(GT32L32_CLK_PORT,	GT32L32_CLK_PIN)		//µÍµçÆ½
+//		#define GT32L32_CLK_H								GPIO_SetBits(GT32L32_CLK_PORT,		GT32L32_CLK_PIN)			//¸ßµçÆ½
+//	//____________SPI_MISO/SO¿ØÖÆ¶¨Òå
+//		#define GT32L32_SO									GPIO_ReadOutputDataBit(GT32L32_MISO_PORT,GT32L32_MISO_PIN)
+//	//____________SPI_MOSI/SI¿ØÖÆ¶¨Òå
+//		#define GT32L32_SI_L								GPIO_ResetBits(GT32L32_MOSI_PORT,	GT32L32_MOSI_PIN)		//µÍµçÆ½
+//		#define GT32L32_SI_H								GPIO_SetBits(GT32L32_MOSI_PORT,		GT32L32_MOSI_PIN)			//¸ßµçÆ½
 
 
 
@@ -144,19 +146,22 @@ typedef struct	_GT32L32_Pin
 	GPIO_TypeDef* 	sGT32L32_CS_PORT;
 	unsigned short 	sGT32L32_CS_PIN;
 
-//	//____________SPI_CLK¶¨Òå
-//	GPIO_TypeDef* 	sGT32L32_CLK_PORT;
-//	unsigned short 	sGT32L32_CLK_PIN;
+	//____________SPI_CLK¶¨Òå
+	GPIO_TypeDef* 	sGT32L32_CLK_PORT;
+	unsigned short 	sGT32L32_CLK_PIN;
 
-//	//____________SPI_MISO¶¨Òå
-//	GPIO_TypeDef* 	sGT32L32_MISO_PORT;
-//	unsigned short 	sGT32L32_MISO_PIN;
+	//____________SPI_MISO¶¨Òå
+	GPIO_TypeDef* 	sGT32L32_MISO_PORT;
+	unsigned short 	sGT32L32_MISO_PIN;
 
-//	//____________SPI_MOSI¶¨Òå
-//	GPIO_TypeDef* 	sGT32L32_MOSI_PORT;
-//	unsigned short 	sGT32L32_MOSI_PIN;
+	//____________SPI_MOSI¶¨Òå
+	GPIO_TypeDef* 	sGT32L32_MOSI_PORT;
+	unsigned short 	sGT32L32_MOSI_PIN;
 	
-}GT32L32_Pindef;
+	//____________SPI_²¨ÌØÂÊ
+	unsigned short 	SPI_BaudRatePrescaler_x;		//x=2/4/8/16/32/64/128/256
+	
+}GT32L32_Init_TypeDef;
 
 //----×Ö·ûµãÕó×Ö¿â»ùµØÖ·±í------------------------------------------------------------
 typedef enum
@@ -231,7 +236,13 @@ typedef struct      /*Card Identification Data*/
 
 
 /* Exported functions ------------------------------------------------------- */
-void GT32L32_PinConf(GT32L32_Pindef *Pinfo);
+
+void 	GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init);				//ÆÕÍ¨SPIÍ¨Ñ¶·½Ê½ÅäÖÃ
+void 	GT32L32_DMA_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init);		//SPI-DMAÍ¨Ñ¶·½Ê½ÅäÖÃ---20170722Î´Íê³É
+u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					//¶ÁÈ¡Ð¾Æ¬×´Ì¬
+
+
+void 	GT32L32_PinConf(GT32L32_Init_TypeDef *GT32L32_Init);
 void	GT32L32_Configuration(void);
 void	GT32L32_Server(void);
 void	GT32L32_GPIO_Configuration(void);
@@ -242,7 +253,7 @@ void	GT32L32_DMA_Configuration(u32 *GT32_TX_Addr,u32 *GT32_RX_Addr,u32 BufferSiz
 u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info);			//µãÕóÊý×Ö·ûºÅ×Ö·û
 u8  GT32L32_GetASCII_Info(u8 ASCIICode,GT32L32_Info_TypeDef *GT32L32_Info);		//ASCII×Ö·ûÐÅÏ¢
 u8	GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);			//GB18030ºº×Ö&×Ö·ûÐÅÏ¢
-u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);							//»ñÈ¡×Ö·ûÐÅÏ¢
+u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);						//»ñÈ¡×Ö·ûÐÅÏ¢
 u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//12x12µãÕóGB18030ºº×Ö&×Ö·û
 u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//16x16µãÕóGB18030ºº×Ö&×Ö·û
 u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//24x24µãÕóGB18030ºº×Ö&×Ö·û
@@ -254,12 +265,12 @@ u32 GT32L32_GetBatteryCode_12X12(u8	NUM,u8 *GetBuffer);								//µç³ØÍ¼±êµ÷ÓÃ³ÌÐ
 u16	GT32L32_U2G_13(u16 Unicode);																			//UNICODE×ªGBKÂë±íÓ³ÉäËã·¨,½ö1&3×Ö·ûÇø
 u32 GT32L32_UNICODE_To_GBK(u16 unicode,u8 *GetBuffer);								//UNICODE×ªGBKÂë±íÓ³ÉäËã·¨£¨²»º¬·ûºÅÇø,×ª»»È«²¿Ë«×Ö½ÚÇø£© 
 u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer);									//BIG5×ªGBK×ª»»Ëã·¨
-u8 GT32L32_ReadStatus(void);																					//¶ÁÈ¡Ð¾Æ¬×´Ì¬
-void GT32L32_ChipErase(void);																					//Ì½³ýÓÃ»§ÇøÊý¾Ý
-u8  GT32L32_ReadBuffer(u32 address,u16 len,unsigned char *Buffer);		//´Ó×Ö¿âÖÐ¶ÁÊý¾Ýº¯Êý
+u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					//¶ÁÈ¡Ð¾Æ¬×´Ì¬
+void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init);																					//Ì½³ýÓÃ»§ÇøÊý¾Ý
+u8  GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u32 address,u16 len,unsigned char *Buffer);		//´Ó×Ö¿âÖÐ¶ÁÊý¾Ýº¯Êý
 u8  GT32L32_ReadWriteByte(u8 Data);		//¶ÁÐ´Ò»¸ö×Ö½Ú
-void GT32L32_SendByte(u8 ByteData);		//·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý,ÏÈ·¢ËÍ¸ßÎ»
-u8 GT32L32_ReadByte(void);		//¶ÁÒ»¸ö×Ö½Ú,ÏÈ¶Á¸ßÎ»
+void GT32L32_SendByte(GT32L32_Init_TypeDef *GT32L32_Init,u8 ByteData);		//·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý,ÏÈ·¢ËÍ¸ßÎ»
+u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init);		//¶ÁÒ»¸ö×Ö½Ú,ÏÈ¶Á¸ßÎ»
 
 
 

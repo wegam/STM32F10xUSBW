@@ -66,6 +66,12 @@ volatile unsigned short gUART5_BufferSizebac=0;			//----无DMA
 
 char	*DMAPrintf_Buffer=NULL;			//USART_DMAPrintf动态空间地址
 
+//--------内部使用函数定义
+//*****************RS485收发控制
+void RS485_TX_EN(RS485_TypeDef *RS485_Info);	//发使能
+u8 RS485_RX_EN(RS485_TypeDef *RS485_Info);		//收使能，已经设置为接收状态返回1，否则返回0
+
+
 /*******************************************************************************
 *函数名			:	USART_DMA_ConfigurationNr
 *功能描述		:	USART_DMA配置--查询方式，不开中断
@@ -1212,8 +1218,8 @@ u16 USART_DMASend(
 *******************************************************************************/
 void RS485_TX_EN(RS485_TypeDef *RS485_Info)
 {
-//	RS485_Info->RS485_CTL_PORT->BSRR		= RS485_Info->RS485_CTL_Pin;
-	GPIO_SetBits(RS485_Info->RS485_CTL_PORT,RS485_Info->RS485_CTL_Pin);
+	RS485_Info->RS485_CTL_PORT->BSRR		= RS485_Info->RS485_CTL_Pin;
+//	GPIO_SetBits(RS485_Info->RS485_CTL_PORT,RS485_Info->RS485_CTL_Pin);
 }
 /*******************************************************************************
 *函数名			:	RS485_RX_EN
@@ -1403,7 +1409,7 @@ u8 RS485_RX_EN(RS485_TypeDef *RS485_Info)
 
 /*******************************************************************************
 *函数名			:	USART_DMA_ConfigurationNr
-*功能描述		:	USART_DMA配置--查询方式，不开中断
+*功能描述		:	USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
@@ -1412,7 +1418,7 @@ void	RS485_DMA_ConfigurationNR(
 																u32 USART_BaudRate,					//波特率
 																u32 *RXDBuffer,							//接收缓冲区地址::发送缓冲区地址在发送数据时设定，串口配置时借用接收缓冲区地址
 																u32 BufferSize							//设定接收缓冲区大小
-)	//USART_DMA配置--查询方式，不开中断
+)	//USART_DMA配置--查询方式，不开中断,配置完默认为接收状态
 {
 	USART_DMA_ConfigurationNR	(RS485_Info->USARTx,USART_BaudRate,RXDBuffer,BufferSize);		//USART_DMA配置--查询方式，不开中断
 	GPIO_Configuration_OPP50	(RS485_Info->RS485_CTL_PORT,RS485_Info->RS485_CTL_Pin);			//将GPIO相应管脚配置为APP(复用推挽)输出模式，最大速度50MHz----V20170605
@@ -1431,6 +1437,7 @@ u16	RS485_ReadBufferIDLE(
 )	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer，
 {
 	u16 length=0;
+	RS485_RX_EN(RS485_Info);
 	length=USART_ReadBufferIDLE(RS485_Info->USARTx,RevBuffer,RxdBuffer);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
 	return length;
 }
