@@ -44,28 +44,28 @@
 #define GT32L32_CLK_SpeedL	0
 #define GT32L32_CLK_SpeedH	1
 
-#ifdef STM32_LCD_GT32L32M0180
+//#ifdef STM32_LCD_GT32L32M0180
 
 	//____________端口定义
-	#define GT32L32_SPI_PORT			SPI1
+//	#define GT32L32_SPI_PORT			SPI1
 
-	#define GT32L32_SPI_Periph		RCC_APB2Periph_SPI1
-	//____________SPI_CS定义
-	#define GT32L32_CS_PORT				GPIOB
-	#define GT32L32_CS_PIN				GPIO_Pin_14
-	#define GT32L32_CS_Periph			RCC_APB2Periph_GPIOB
-	//____________SPI_CLK定义
-	#define GT32L32_CLK_PORT			GPIOA
-	#define GT32L32_CLK_PIN				GPIO_Pin_5
-	#define GT32L32_CLK_Periph		RCC_APB2Periph_GPIOA
-	//____________SPI_MISO定义
-	#define GT32L32_MISO_PORT			GPIOA
-	#define GT32L32_MISO_PIN			GPIO_Pin_6
-	#define GT32L32_MISO_Periph		RCC_APB2Periph_GPIOA
-	//____________SPI_MOSI定义
-	#define GT32L32_MOSI_PORT			GPIOA
-	#define GT32L32_MOSI_PIN			GPIO_Pin_7
-	#define GT32L32_MOSI_Periph		RCC_APB2Periph_GPIOA
+//	#define GT32L32_SPI_Periph		RCC_APB2Periph_SPI1
+//	//____________SPI_CS定义
+//	#define GT32L32_CS_PORT				GPIOB
+//	#define GT32L32_CS_PIN				GPIO_Pin_14
+//	#define GT32L32_CS_Periph			RCC_APB2Periph_GPIOB
+//	//____________SPI_CLK定义
+//	#define GT32L32_CLK_PORT			GPIOA
+//	#define GT32L32_CLK_PIN				GPIO_Pin_5
+//	#define GT32L32_CLK_Periph		RCC_APB2Periph_GPIOA
+//	//____________SPI_MISO定义
+//	#define GT32L32_MISO_PORT			GPIOA
+//	#define GT32L32_MISO_PIN			GPIO_Pin_6
+//	#define GT32L32_MISO_Periph		RCC_APB2Periph_GPIOA
+//	//____________SPI_MOSI定义
+//	#define GT32L32_MOSI_PORT			GPIOA
+//	#define GT32L32_MOSI_PIN			GPIO_Pin_7
+//	#define GT32L32_MOSI_Periph		RCC_APB2Periph_GPIOA
 
 	//____________GPIO控制定义
 
@@ -85,54 +85,54 @@
 
 
 
-#else
-	//____________端口定义
-	#define GT32L32_SPI_PORT			SPI1
-	#define GT32L32_SPI_Periph		RCC_APB2Periph_SPI1
-	//____________SPI_CS定义
-	#define GT32L32_CS_PORT				GPIOA
-	#define GT32L32_CS_PIN				GPIO_Pin_4
-	#define GT32L32_CS_Periph			RCC_APB2Periph_GPIOB
-	//____________SPI_CLK定义
-	#define GT32L32_CLK_PORT			GPIOA
-	#define GT32L32_CLK_PIN				GPIO_Pin_5
-	#define GT32L32_CLK_Periph		RCC_APB2Periph_GPIOA
-	//____________SPI_MISO定义
-	#define GT32L32_MISO_PORT			GPIOA
-	#define GT32L32_MISO_PIN			GPIO_Pin_6
-	#define GT32L32_MISO_Periph		RCC_APB2Periph_GPIOA
-	//____________SPI_MOSI定义
-	#define GT32L32_MOSI_PORT			GPIOA
-	#define GT32L32_MOSI_PIN			GPIO_Pin_7
-	#define GT32L32_MOSI_Periph		RCC_APB2Periph_GPIOA
+//#else
+//	//____________端口定义
+//	#define GT32L32_SPI_PORT			SPI1
+//	#define GT32L32_SPI_Periph		RCC_APB2Periph_SPI1
+//	//____________SPI_CS定义
+//	#define GT32L32_CS_PORT				GPIOA
+//	#define GT32L32_CS_PIN				GPIO_Pin_4
+//	#define GT32L32_CS_Periph			RCC_APB2Periph_GPIOB
+//	//____________SPI_CLK定义
+//	#define GT32L32_CLK_PORT			GPIOA
+//	#define GT32L32_CLK_PIN				GPIO_Pin_5
+//	#define GT32L32_CLK_Periph		RCC_APB2Periph_GPIOA
+//	//____________SPI_MISO定义
+//	#define GT32L32_MISO_PORT			GPIOA
+//	#define GT32L32_MISO_PIN			GPIO_Pin_6
+//	#define GT32L32_MISO_Periph		RCC_APB2Periph_GPIOA
+//	//____________SPI_MOSI定义
+//	#define GT32L32_MOSI_PORT			GPIOA
+//	#define GT32L32_MOSI_PIN			GPIO_Pin_7
+//	#define GT32L32_MOSI_Periph		RCC_APB2Periph_GPIOA
 
-	//____________GPIO控制定义
-	#ifdef		GT32L32_BITBAND		//*************位绑定
-		//____________SPI_CS控制定义
-			#define GT32L32_CS_DisSelect				PA4=1			//取消片选
-			#define GT32L32_CS_Select						PA4=0			//片选
-		//____________SPI_CLK/SCLK控制定义
-			#define GT32L32_CLK_L								PA5=0			//低电平
-			#define GT32L32_CLK_H								PA5=1			//高电平
-		//____________SPI_MISO/SO控制定义
-			#define GT32L32_SO									PA6in
-		//____________SPI_MOSI/SI控制定义
-			#define GT32L32_SI_L								PA7=0			//低电平
-			#define GT32L32_SI_H								PA7=1			//高电平
-	#else		//*************未进行位绑定
-		//____________SPI_CS控制定义
-			#define GT32L32_CS_DisSelect				GPIO_SetBits(GT32L32_CS_PORT,				GT32L32_CS_PIN)			//取消片选
-			#define GT32L32_CS_Select						GPIO_ResetBits(GT32L32_CS_PORT,			GT32L32_CS_PIN)		//使能片选
-		//____________SPI_CLK/SCLK控制定义
-			#define GT32L32_CLK_L								GPIO_ResetBits(GT32L32_CLK_PORT,	GT32L32_CLK_PIN)		//低电平
-			#define GT32L32_CLK_H								GPIO_SetBits(GT32L32_CLK_PORT,		GT32L32_CLK_PIN)			//高电平
-		//____________SPI_MISO/SO控制定义
-			#define GT32L32_SO									GPIO_ReadOutputDataBit(GT32L32_MISO_PORT,GT32L32_MISO_PIN)
-		//____________SPI_MOSI/SI控制定义
-			#define GT32L32_SI_L								GPIO_ResetBits(GT32L32_MOSI_PORT,	GT32L32_MOSI_PIN)		//低电平
-			#define GT32L32_SI_H								GPIO_SetBits(GT32L32_MOSI_PORT,		GT32L32_MOSI_PIN)			//高电平
-	#endif	
-#endif
+//	//____________GPIO控制定义
+//	#ifdef		GT32L32_BITBAND		//*************位绑定
+//		//____________SPI_CS控制定义
+//			#define GT32L32_CS_DisSelect				PA4=1			//取消片选
+//			#define GT32L32_CS_Select						PA4=0			//片选
+//		//____________SPI_CLK/SCLK控制定义
+//			#define GT32L32_CLK_L								PA5=0			//低电平
+//			#define GT32L32_CLK_H								PA5=1			//高电平
+//		//____________SPI_MISO/SO控制定义
+//			#define GT32L32_SO									PA6in
+//		//____________SPI_MOSI/SI控制定义
+//			#define GT32L32_SI_L								PA7=0			//低电平
+//			#define GT32L32_SI_H								PA7=1			//高电平
+//	#else		//*************未进行位绑定
+//		//____________SPI_CS控制定义
+//			#define GT32L32_CS_DisSelect				GPIO_SetBits(GT32L32_CS_PORT,				GT32L32_CS_PIN)			//取消片选
+//			#define GT32L32_CS_Select						GPIO_ResetBits(GT32L32_CS_PORT,			GT32L32_CS_PIN)		//使能片选
+//		//____________SPI_CLK/SCLK控制定义
+//			#define GT32L32_CLK_L								GPIO_ResetBits(GT32L32_CLK_PORT,	GT32L32_CLK_PIN)		//低电平
+//			#define GT32L32_CLK_H								GPIO_SetBits(GT32L32_CLK_PORT,		GT32L32_CLK_PIN)			//高电平
+//		//____________SPI_MISO/SO控制定义
+//			#define GT32L32_SO									GPIO_ReadOutputDataBit(GT32L32_MISO_PORT,GT32L32_MISO_PIN)
+//		//____________SPI_MOSI/SI控制定义
+//			#define GT32L32_SI_L								GPIO_ResetBits(GT32L32_MOSI_PORT,	GT32L32_MOSI_PIN)		//低电平
+//			#define GT32L32_SI_H								GPIO_SetBits(GT32L32_MOSI_PORT,		GT32L32_MOSI_PIN)			//高电平
+//	#endif	
+//#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
@@ -243,31 +243,39 @@ u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					/
 
 
 void 	GT32L32_PinConf(GT32L32_Init_TypeDef *GT32L32_Init);
-void	GT32L32_Configuration(void);
 void	GT32L32_Server(void);
-void	GT32L32_GPIO_Configuration(void);
-void	GT32L32_SPI_Configuration(char Speed);
-void	GT32L32_DMA_Configuration(u32 *GT32_TX_Addr,u32 *GT32_RX_Addr,u32 BufferSize);
 
 
 u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info);			//点阵数字符号字符
 u8  GT32L32_GetASCII_Info(u8 ASCIICode,GT32L32_Info_TypeDef *GT32L32_Info);		//ASCII字符信息
 u8	GT32L32_GetGB18030_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);			//GB18030汉字&字符信息
-u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);						//获取字符信息
-u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//12x12点阵GB18030汉字&字符
-u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//16x16点阵GB18030汉字&字符
-u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//24x24点阵GB18030汉字&字符
-u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer);	//32x32点阵GB18030汉字&字符
+u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);						//获取字符地址和点阵长度
+
+
+
+u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//获取地址
+u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//获取长度
+
+
+u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4);		//12x12点阵GB18030汉字&字符地址计算
+u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4);		//16x16点阵GB18030汉字&字符地址计算
+u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4);		//24x24点阵GB18030汉字&字符地址计算
+u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4);		//32x32点阵GB18030汉字&字符地址计算
 u32 GT32L32_GetBarCode_13(u8 * BAR_NUM);															//EAN13条形码调用程序
 u32 GT32L32_GetBarCode_128(u8	*BAR_NUM,u8	flag);											//GB/T 18347-2001(CODE128)条形码调用程序
 u32 GT32L32_GetAntennaCode_12X12(u8	NUM,u8 *GetBuffer);								//天线图标调用程序
 u32 GT32L32_GetBatteryCode_12X12(u8	NUM,u8 *GetBuffer);								//电池图标调用程序
+
 u16	GT32L32_U2G_13(u16 Unicode);																			//UNICODE转GBK码表映射算法,仅1&3字符区
 u32 GT32L32_UNICODE_To_GBK(u16 unicode,u8 *GetBuffer);								//UNICODE转GBK码表映射算法（不含符号区,转换全部双字节区） 
 u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer);									//BIG5转GBK转换算法
+
+
+
+
 u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					//读取芯片状态
 void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init);																					//探除用户区数据
-u8  GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u32 address,u16 len,unsigned char *Buffer);		//从字库中读数据函数
+u8  GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 address,u16 len,unsigned char *Buffer);		//从字库中读数据函数
 u8  GT32L32_ReadWriteByte(u8 Data);		//读写一个字节
 void GT32L32_SendByte(GT32L32_Init_TypeDef *GT32L32_Init,u8 ByteData);		//发送一个字节数据,先发送高位
 u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init);		//读一个字节,先读高位

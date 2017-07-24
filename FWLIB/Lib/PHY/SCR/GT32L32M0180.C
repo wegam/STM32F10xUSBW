@@ -65,7 +65,7 @@ void GT32L32_CLK_H(GT32L32_Init_TypeDef *GT32L32_Init);
 void GT32L32_SI_L(GT32L32_Init_TypeDef *GT32L32_Init);
 void GT32L32_SI_H(GT32L32_Init_TypeDef *GT32L32_Init);
 u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init);
-#if 0
+
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
@@ -616,26 +616,7 @@ void GT32L32_PinConf(GT32L32_Init_TypeDef *GT32L32_Init)
 		SPI_SSOutputCmd(GT32L32_Init->sSPIx, ENABLE);			//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 	}
 }
-//=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
-//->函数名			:	SDCard_Configuration
-//->功能描述		:	SD卡项目配置
-//->输入			: 无
-//->输出			:	Errorstatus	配置状态
-//->返回值			:	无
-//->例程			:
-//->调用函数		:
-//->被调用函数	:
-//<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-void	GT32L32_Configuration(void)
-{
-	//____________函数调用
-	GT32L32_GPIO_Configuration();										//SPI管脚配置
-	GT32L32_SPI_Configuration(GT32L32_CLK_SpeedH);	//SPI配置--低速
-#ifdef	GT32L32_DMA
-	GT32L32_DMA_Configuration((u32*)SD_TX_Addr,(u32*)SD_RX_Addr,SDCard_BufferSize);
-#endif
 
-}
 //=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
 //->函数名			:	SDCard_Server
 //->功能描述		:	SD卡项目执行(服务)程序
@@ -649,163 +630,6 @@ void	GT32L32_Configuration(void)
 void	GT32L32_Server(void)
 {
 
-}
-//=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
-//->函数名			:	SDCard_GPIO_Configuration
-//->功能描述		:	SPI管脚配置
-//->输入			: 
-//->输出			:	无
-//->返回值			:	无
-//->例程			:
-//->调用函数		:
-//->被调用函数	:
-//<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-void GT32L32_GPIO_Configuration(void)
-{
-	//1)____________定义
-	GPIO_InitTypeDef		GPIO_InitStructure;
-	//2)____________开启时钟
-		
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,	ENABLE);		//开启AFIO
-	RCC_APB2PeriphClockCmd(GT32L32_CS_Periph,		ENABLE);		//开启CS时钟
-	RCC_APB2PeriphClockCmd(GT32L32_CLK_Periph,	ENABLE);		//开启CLK时钟
-	RCC_APB2PeriphClockCmd(GT32L32_MISO_Periph,	ENABLE);		//开启MISO时钟
-	RCC_APB2PeriphClockCmd(GT32L32_MOSI_Periph,	ENABLE);		//开启MOSI时钟	
-	//3)____________管脚配置
-	//3.1）CS配置
-	GPIO_InitStructure.GPIO_Pin			=	GT32L32_CS_PIN;
-	GPIO_InitStructure.GPIO_Mode		=	GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed		= GPIO_Speed_50MHz;
-	GPIO_Init(GT32L32_CS_PORT, &GPIO_InitStructure);
-	//3.2）CLK配置
-	GPIO_InitStructure.GPIO_Pin			=	GT32L32_CLK_PIN;
-	GPIO_InitStructure.GPIO_Mode		=	GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Speed		= GPIO_Speed_50MHz;
-	GPIO_Init(GT32L32_CLK_PORT, &GPIO_InitStructure);
-	//3.3）MISO配置
-	GPIO_InitStructure.GPIO_Pin			=	GT32L32_MISO_PIN;
-	GPIO_InitStructure.GPIO_Mode		=	GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Speed		= GPIO_Speed_50MHz;
-	GPIO_Init(GT32L32_MISO_PORT, &GPIO_InitStructure);
-	//3.4）MOSI配置
-	GPIO_InitStructure.GPIO_Pin			=	GT32L32_MOSI_PIN;
-	GPIO_InitStructure.GPIO_Mode		=	GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Speed		= GPIO_Speed_50MHz;
-	GPIO_Init(GT32L32_MOSI_PORT, &GPIO_InitStructure);
-	
-}
-//=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
-//->函数名			:	SDCard_SPI_Configuration
-//->功能描述		:	SPI配置
-//->输入			: Speed SPI速度选择（低速/高速)
-//->输出			:	无
-//->返回值			:	无
-//->例程			:
-//->调用函数		:
-//->被调用函数	:
-//<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-void GT32L32_SPI_Configuration(char Speed)
-{
-	//1)____________定义
-	SPI_InitTypeDef			SPI_InitStructure;
-	RCC_APB2PeriphClockCmd(GT32L32_SPI_Periph,		ENABLE);		//开启SPI时钟
-	//2)____________SPI初始化
-	if(Speed==GT32L32_CLK_SpeedH)		//高速端口
-	{
-		SPI_InitStructure.SPI_Direction					=	SPI_Direction_2Lines_FullDuplex;	//设置方向				（2线全双工、2线只接收、一线发送、一线接收）
-		SPI_InitStructure.SPI_Mode							=	SPI_Mode_Master;									//模式         	（从或主设备）
-		SPI_InitStructure.SPI_DataSize					=	SPI_DataSize_8b;									//宽度         	（8或16位）
-		SPI_InitStructure.SPI_CPOL							=	SPI_CPOL_High;										//时钟极性     	（低或高）
-		SPI_InitStructure.SPI_CPHA							=	SPI_CPHA_2Edge;										//时钟相位     	（第一个或第二个跳变沿）
-		SPI_InitStructure.SPI_NSS								=	SPI_NSS_Soft;											//片选方式     	（硬件或软件方式）
-	//	SPI_InitStructure.SPI_NSS=SPI_NSS_Hard;																		//片选方式     	（硬件或软件方式）
-		SPI_InitStructure.SPI_BaudRatePrescaler	=	SPI_BaudRatePrescaler_128;				//波特率预分频 	（从2---256分频）
-		SPI_InitStructure.SPI_FirstBit					=	SPI_FirstBit_MSB;									//最先发送的位 	（最低位，还是最高位在先）
-		SPI_InitStructure.SPI_CRCPolynomial			=	0X07;															//设置crc多项式	（其复位值为0x0007，根据应用可以设置其他数值。）
-		SPI_Init(GT32L32_SPI_PORT,&SPI_InitStructure);															//SPI1初始化
-	}
-	else											//低速端口
-	{
-		SPI_InitStructure.SPI_Direction					=	SPI_Direction_2Lines_FullDuplex;	//设置方向				（2线全双工、2线只接收、一线发送、一线接收）
-		SPI_InitStructure.SPI_Mode							=	SPI_Mode_Master;									//模式         	（从或主设备）
-		SPI_InitStructure.SPI_DataSize					=	SPI_DataSize_8b;									//宽度         	（8或16位）
-		SPI_InitStructure.SPI_CPOL							=	SPI_CPOL_High;										//时钟极性     	（低或高）
-		SPI_InitStructure.SPI_CPHA							=	SPI_CPHA_2Edge;										//时钟相位     	（第一个或第二个跳变沿）
-		SPI_InitStructure.SPI_NSS								=	SPI_NSS_Soft;											//片选方式     	（硬件或软件方式）
-	//	SPI_InitStructure.SPI_NSS=SPI_NSS_Hard;																		//片选方式     	（硬件或软件方式）
-		SPI_InitStructure.SPI_BaudRatePrescaler	=	SPI_BaudRatePrescaler_256;				//波特率预分频 	（从2---256分频）
-		SPI_InitStructure.SPI_FirstBit					=	SPI_FirstBit_MSB;									//最先发送的位 	（最低位，还是最高位在先）
-		SPI_InitStructure.SPI_CRCPolynomial			=	0X07;															//设置crc多项式	（其复位值为0x0007，根据应用可以设置其他数值。）
-		SPI_Init(GT32L32_SPI_PORT,&SPI_InitStructure);															//SPI1初始化
-	}
-	GT32L32_CS_DisSelect;			//取消片选
-	SPI_Cmd(GT32L32_SPI_PORT, ENABLE);				//使能SPI
-}
-//=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
-//->函数名			:	SDCard_DMA_Configuration
-//->功能描述		:	DMA配置
-//->输入			: SD_TX_Addr	SPI发送地址
-//							SD_RX_Addr	SPI接收地址
-//							BufferSize	DMA缓存大小
-//->输出			:	无
-//->返回值			:	无
-//->例程			:
-//->调用函数		:
-//->被调用函数	:
-//<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-void	GT32_DMA_Configuration(u32 *GT32L32_TX_Addr,u32 *GT32L32_RX_Addr,u32 BufferSize)
-{
-	//1)____________定义
-	DMA_InitTypeDef			DMA_Initstructure;
-	NVIC_InitTypeDef		NVIC_Initstructure;
-	
-	//2)____________DMA发送初始化，外设作为DMA的目的端
-	DMA_Initstructure.DMA_PeripheralBaseAddr	=	(u32)(&SPI1->DR);								//DMA外设源地址
-	DMA_Initstructure.DMA_MemoryBaseAddr			=	(u32)GT32L32_TX_Addr;								//DMA数据内存地址
-	DMA_Initstructure.DMA_DIR									= DMA_DIR_PeripheralDST;					//DMA_DIR_PeripheralDST（外设作为DMA的目的端），DMA_DIR_PeripheralSRC（外设作为数据传输的来源）
-	DMA_Initstructure.DMA_BufferSize					= BufferSize; 										//指定DMA通道的DMA缓存的大小
-	DMA_Initstructure.DMA_PeripheralInc				= DMA_PeripheralInc_Disable;			//DMA_PeripheralInc_Enable（外设地址寄存器递增），DMA_PeripheralInc_Disable（外设地址寄存器不变），
-	DMA_Initstructure.DMA_MemoryInc						=	DMA_MemoryInc_Enable;						//DMA_MemoryInc_Enable（内存地址寄存器递增），DMA_MemoryInc_Disable（内存地址寄存器不变）
-	DMA_Initstructure.DMA_PeripheralDataSize	= DMA_PeripheralDataSize_Byte;		//外设数据宽度--DMA_PeripheralDataSize_Byte（数据宽度为8位），DMA_PeripheralDataSize_HalfWord（数据宽度为16位），DMA_PeripheralDataSize_Word（数据宽度为32位）
-	DMA_Initstructure.DMA_MemoryDataSize			= DMA_MemoryDataSize_Byte;				//内存数据宽度--DMA_MemoryDataSize_Byte（数据宽度为8位），DMA_MemoryDataSize_HalfWord（数据宽度为16位），DMA_MemoryDataSize_Word（数据宽度为32位）
-	DMA_Initstructure.DMA_Mode								= DMA_Mode_Normal;								//DMA工作模式--DMA_Mode_Normal（只传送一次）, DMA_Mode_Circular（不停地传送）
-	DMA_Initstructure.DMA_Priority						= DMA_Priority_High; 							//DMA通道的转输优先级--DMA_Priority_VeryHigh（非常高）DMA_Priority_High（高)，DMA_Priority_Medium（中），DMA_Priority_Low（低）
-	DMA_Initstructure.DMA_M2M									= DMA_M2M_Disable;								//DMA通道的内存到内存传输--DMA_M2M_Enable(设置为内存到内存传输)，DMA_M2M_Disable（非内存到内存传输）
-	DMA_Init(DMA1_Channel3,&DMA_Initstructure);																	//初始化DMA
-
-	//3)____________DMA接收初始化，外设作为DMA的源端
-	DMA_Initstructure.DMA_PeripheralBaseAddr	=	(u32)(&SPI1->DR);								//DMA外设源地址
-	DMA_Initstructure.DMA_MemoryBaseAddr     	=	(u32)GT32L32_RX_Addr;								//DMA数据内存地址
-	DMA_Initstructure.DMA_DIR									=	DMA_DIR_PeripheralSRC;					//DMA_DIR_PeripheralDST（外设作为DMA的目的端），DMA_DIR_PeripheralSRC（外设作为数据传输的来源）
-	DMA_Initstructure.DMA_BufferSize					= BufferSize; 										//指定DMA通道的DMA缓存的大小
-	DMA_Initstructure.DMA_PeripheralInc				= DMA_PeripheralInc_Disable;			//DMA_PeripheralInc_Enable（外设地址寄存器递增），DMA_PeripheralInc_Disable（外设地址寄存器不变），
-	DMA_Initstructure.DMA_MemoryInc						=	DMA_MemoryInc_Enable;						//DMA_MemoryInc_Enable（内存地址寄存器递增），DMA_MemoryInc_Disable（内存地址寄存器不变）
-	DMA_Initstructure.DMA_PeripheralDataSize	= DMA_PeripheralDataSize_Byte;		//外设数据宽度--DMA_PeripheralDataSize_Byte（数据宽度为8位），DMA_PeripheralDataSize_HalfWord（数据宽度为16位），DMA_PeripheralDataSize_Word（数据宽度为32位）
-	DMA_Initstructure.DMA_MemoryDataSize			= DMA_MemoryDataSize_Byte;				//内存数据宽度--DMA_MemoryDataSize_Byte（数据宽度为8位），DMA_MemoryDataSize_HalfWord（数据宽度为16位），DMA_MemoryDataSize_Word（数据宽度为32位）
-	DMA_Initstructure.DMA_Mode								= DMA_Mode_Normal;								//DMA工作模式--DMA_Mode_Normal（只传送一次）, DMA_Mode_Circular（不停地传送）
-	DMA_Initstructure.DMA_Priority						= DMA_Priority_High; 							//DMA通道的转输优先级--DMA_Priority_VeryHigh（非常高）DMA_Priority_High（高)，DMA_Priority_Medium（中），DMA_Priority_Low（低）
-	DMA_Initstructure.DMA_M2M									= DMA_M2M_Disable;								//DMA通道的内存到内存传输--DMA_M2M_Enable(设置为内存到内存传输)，DMA_M2M_Disable（非内存到内存传输）
-	DMA_Init(DMA1_Channel2,&DMA_Initstructure);																	//初始化DMA
-	
-	//4)____________DMA通道中断初始化---此为DMA发送中断----DMA发送完成中断
-	NVIC_Initstructure.NVIC_IRQChannel = DMA1_Channel2_IRQChannel;       				//设置中断源
-	NVIC_Initstructure.NVIC_IRQChannelPreemptionPriority=1;
-	NVIC_Initstructure.NVIC_IRQChannelSubPriority = 1; 													//中断响应优先级0	
-	NVIC_Initstructure.NVIC_IRQChannelCmd = ENABLE;        											//打开中断
-	NVIC_Init(&NVIC_Initstructure);
-
-	//5)____________设置触发中断事件
-	//		DMA_IT_TC		传输完成中断
-	//		DMA_IT_HT		传输过半中断
-	//		DMA_IT_TE		传输错误中断
-	DMA_ITConfig(DMA1_Channel2,DMA_IT_TC,ENABLE);						//传输完成中断屏蔽
-	//6)____________使能DMA传输通道	
-	SPI_I2S_DMACmd(GT32L32_SPI_PORT, SPI_I2S_DMAReq_Tx, ENABLE);				//使能DMA发送
-	SPI_I2S_DMACmd(GT32L32_SPI_PORT, SPI_I2S_DMAReq_Rx, ENABLE);				//使能DMA接收
-
-	//6)____________禁止DMA---需要传输时再打开
-	DMA_Cmd(DMA1_Channel2,DISABLE);	
-	DMA_Cmd(DMA1_Channel3,DISABLE);
 }
 
 /*****************************************************************************
@@ -826,16 +650,16 @@ u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info)
 	switch(BaseAddr)
 	{
 	case 0x112400:	address=Sequence * 56+ BaseAddr;
-									len=56;	//GT32L32_ReadBuffer(Sequence * 56+ BaseAdd,56,DZ_Data); //14X28
+									len=56;	//GT32L32_ReadBuffer(Sequence * 56+ BaseAdd,56,DZ_Data); 			//14X28
 				break ;
 	case 0x112748: 	address=Sequence * 120+ BaseAddr;
-									len=120;//GT32L32_ReadBuffer(Sequence * 120+ BaseAdd,120,DZ_Data); //20X40
+									len=120;//GT32L32_ReadBuffer(Sequence * 120+ BaseAdd,120,DZ_Data); 		//20X40
 				break ;
 	case 0x112CE8: 	address=Sequence * 114+ BaseAddr+2;
-									len=112;//GT32L32_ReadBuffer(Sequence * 114+ BaseAdd+2,112,DZ_Data); //28X28
+									len=112;//GT32L32_ReadBuffer(Sequence * 114+ BaseAdd+2,112,DZ_Data); 	//28X28
 				break ;
 	case 0x113396: 	address=Sequence * 202+ BaseAddr+2;
-									len=200;//GT32L32_ReadBuffer(Sequence * 202+ BaseAdd+2,200,DZ_Data); //40X40
+									len=200;//GT32L32_ReadBuffer(Sequence * 202+ BaseAdd+2,200,DZ_Data); 	//40X40
 				break ;  
 	default:       break ;
 	}
@@ -1069,25 +893,51 @@ u8 GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info)
 //	return(Address*32+BaseAddr);
 		return 0;
 }
-/*************************************************************************************************** 
-16x16点阵GB18030汉字&字符
-函数：u8 GB18030_16_GetData(u8 c1, u8 c2, u8 c3, u8 c4) 
-功能：计算汉字点阵在芯片中的地址,读取点阵数据到指定数组。 
-参数：c1,c2,c3,c4：
-4字节汉字内码通过参数c1,c2,c3,c4传入，双字节内码通过参数c1,c2 传入，c3=0,c4=0 
-返回：汉字点阵的字节地址(byte address)。
-如果用户是按 word mode 读取点阵数据，则其地址(word address)为字节地址除以2，
-即：word address = byte address / 2 . 例如：
-BaseAdd: 说明汉字点阵数据在字库芯片中的起始地址，即BaseAdd＝0x114FDE;
- “啊”字的内码为0xb0a1,则byte address = GB18030_16_GetData(0xb0,0xa1,0x00,0x00) *32+BaseAdd; 
-word address = byte address / 2 
-“.”字的内码为0x8139ee39,则byte address = GB18030_16_GetData(0x81,0x39,0xee,0x39) *32+ BaseAdd
-word address = byte address / 2 
-****************************************************************************************************/
-u32 GT32L32_GetBufferLen(u16 word,GT32L32_BaseAddr_TypeDef *BaseAddr,u8 c1, u8 c2, u8 c3, u8 c4) 
-{ 
+/*******************************************************************************
+*函数名			:	function
+*功能描述		:	函数功能说明
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4)
+{
 	u32 len=0;
 	u32 Address=0;
+	u32 BaseAddr=0;
+	
+	//字体大小判断
+			if(font==12)
+			{
+				BaseAddr=GB18030_BaseAddr_hz12x12;
+			}
+			else if(font==16)
+			{
+				BaseAddr=GB18030_BaseAddr_hz16x16;
+			}
+			else if(font==24)
+			{
+				BaseAddr=GB18030_BaseAddr_hz24x24;
+			}
+			else if(font==32)
+			{
+				BaseAddr=GB18030_BaseAddr_hz32x32;
+			}
+			
+				//____________字体判断
+	switch(BaseAddr)
+	{
+		case	GB18030_BaseAddr_zf12x12	:		len=24;
+					break;
+		case	GB18030_BaseAddr_zf16x16	:		len=32;
+					break;
+		case	GB18030_BaseAddr_zf24x24	:		len=72;
+					break;
+		case	GB18030_BaseAddr_zf32x32	:		len=128;
+					break;
+		default: 
+					break ;
+	}
+			
 //	u32 BaseAdd=0x194FDE; 
 	if(c2==0x7f) 
 	{
@@ -1124,67 +974,10 @@ u32 GT32L32_GetBufferLen(u16 word,GT32L32_BaseAddr_TypeDef *BaseAddr,u8 c1, u8 c
 		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
 	} 
 //	GT32L32_ReadBuffer(Address*32+BaseAddr,32,GetBuffer);
-	return(Address*32+*BaseAddr); 
-}
-/*************************************************************************************************** 
-12x12点阵GB18030汉字&字符
-函数：u32 GB18030_12_GetData(u8 c1, u8 c2, u8 c3, u8 c4) 
-功能：计算汉字点阵在芯片中的地址，读取点阵数据到指定数组。 
-参数：汉字内码通过参数c1,c2传入，c3=0;c4=0. 
-注：12x12为GBK字符集，无四字节区。 
-返回：汉字点阵的字节地址(byte address)。
-如果用户是按 word mode 读取点阵数据，则其地址(word address)为字节地址除以2，
-即：word address = byte address / 2 . 例如：
-BaseAdd: 说明汉字点阵数据在字库芯片中的起始地址，即BaseAdd＝0x093D0E，
-“啊”字的内码为0xb0a1,则byte address = GB18030_12_GetData(0xb0,0xa1,0x00,0x00) *24+BaseAdd ,
-word address = byte address / 2	.
-****************************************************************************************************/
-#ifdef	STM32_GT32L32M0180_Code_Edit
-u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer) 
-{
-	u32 h=0;
-	u32 BaseAdd=0x113D0E; 
-	
-	return 0;
+	return(Address*32+BaseAddr);
+
 }
 
-#else
-
-u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer) 
-{
-	u32 h=0;
-	u32 BaseAdd=0x113D0E; 
-	if(c2==0x7f) 
-	{
-		GT32L32_ReadBuffer(BaseAdd,24,GetBuffer);
-		return (BaseAdd);
-	} 
-	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) 			//Section 1 
-		h= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
-	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) 	//Section 5 
-	{ 
-		if(c2>0x7f)
-			c2--; 
-		h=(c1-0xa8)*96 + (c2-0x40)+846; 
-	} 
-	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
-			h= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
-	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) //Section 3 
-	{ 
-		if(c2>0x7f) 
-			c2--;
-		h=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
-	} 
-	else if(c1>=0xaa && c2<0xa1) //Section 4 
-	{ 
-		if(c2>0x7f) 
-			c2--; 
-		h=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
-	} 
-	GT32L32_ReadBuffer(h*24+BaseAdd,24,GetBuffer);
-	return(h*24+BaseAdd); 
-}
-#endif
 /*************************************************************************************************** 
 16x16点阵GB18030汉字&字符
 函数：u8 GB18030_16_GetData(u8 c1, u8 c2, u8 c3, u8 c4) 
@@ -1200,47 +993,148 @@ word address = byte address / 2
 “.”字的内码为0x8139ee39,则byte address = GB18030_16_GetData(0x81,0x39,0xee,0x39) *32+ BaseAdd
 word address = byte address / 2 
 ****************************************************************************************************/
-u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer) 
+u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4) 
 { 
-	u32 h=0;
-	u32 BaseAdd=0x194FDE; 
+	
+		u32 lengh=0;
+	u32 Address=0;
+	u32 BaseAddr=0;
+	
+	//字体大小判断
+			if(font==12)
+			{
+				BaseAddr=GB18030_BaseAddr_hz12x12;
+			}
+			else if(font==16)
+			{
+				BaseAddr=GB18030_BaseAddr_hz16x16;
+			}
+			else if(font==24)
+			{
+				BaseAddr=GB18030_BaseAddr_hz24x24;
+			}
+			else if(font==32)
+			{
+				BaseAddr=GB18030_BaseAddr_hz32x32;
+			}
+			
+				//____________字体判断
+	switch(BaseAddr)
+	{
+		case	GB18030_BaseAddr_zf12x12	:		lengh=24;
+					break;
+		case	GB18030_BaseAddr_zf16x16	:		lengh=32;
+					break;
+		case	GB18030_BaseAddr_zf24x24	:		lengh=72;
+					break;
+		case	GB18030_BaseAddr_zf32x32	:		lengh=128;
+					break;
+		default: 
+					break ;
+	}
+	return lengh;
+	
+	 
+}
+/*************************************************************************************************** 
+12x12点阵GB18030汉字&字符
+函数：u32 GB18030_12_GetData(u8 c1, u8 c2, u8 c3, u8 c4) 
+功能：计算汉字点阵在芯片中的地址，读取点阵数据到指定数组。 
+参数：汉字内码通过参数c1,c2传入，c3=0;c4=0. 
+注：12x12为GBK字符集，无四字节区。 
+返回：汉字点阵的字节地址(byte address)。
+如果用户是按 word mode 读取点阵数据，则其地址(word address)为字节地址除以2，
+即：word address = byte address / 2 . 例如：
+BaseAdd: 说明汉字点阵数据在字库芯片中的起始地址，即12x12点阵字库起始地址：BaseAdd＝0x113D0E
+“啊”字的内码为0xb0a1,则byte address = GB18030_12_GetData(0xb0,0xa1,0x00,0x00) *24+BaseAdd ,
+word address = byte address / 2	.
+****************************************************************************************************/
+u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4) 
+{
+	u32 Address=0;						//Address：对应字符点阵在芯片中的字节地址。
+	u32 BaseAdd=0x113D0E; 		//12x12点阵字库起始地址：BaseAdd＝0x113D0E
 	if(c2==0x7f) 
 	{
-		GT32L32_ReadBuffer(BaseAdd,32,GetBuffer);
 		return (BaseAdd);
 	} 
-	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) //Section 1 
-		h= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
-	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) //Section 5 
+	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) 			//Section 1 
+		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
+	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) 	//Section 5 
 	{ 
 		if(c2>0x7f)
 			c2--; 
-		h=(c1-0xa8)*96 + (c2-0x40)+846; 
+		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
 	} 
 	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
-		h= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
+			Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
 	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) //Section 3 
 	{ 
 		if(c2>0x7f) 
 			c2--;
-		h=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
+		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
 	} 
 	else if(c1>=0xaa && c2<0xa1) //Section 4 
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		h=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
+	} 
+	return(Address*24+BaseAdd); 
+}
+/*************************************************************************************************** 
+16x16点阵GB18030汉字&字符
+函数：u8 GB18030_16_GetData(u8 c1, u8 c2, u8 c3, u8 c4) 
+功能：计算汉字点阵在芯片中的地址,读取点阵数据到指定数组。 
+参数：c1,c2,c3,c4：
+4字节汉字内码通过参数c1,c2,c3,c4传入，双字节内码通过参数c1,c2 传入，c3=0,c4=0 
+返回：汉字点阵的字节地址(byte address)。
+如果用户是按 word mode 读取点阵数据，则其地址(word address)为字节地址除以2，
+即：word address = byte address / 2 . 例如：
+BaseAdd: 说明汉字点阵数据在字库芯片中的起始地址，即BaseAdd＝0x114FDE;
+ “啊”字的内码为0xb0a1,则byte address = GB18030_16_GetData(0xb0,0xa1,0x00,0x00) *32+BaseAdd; 
+word address = byte address / 2 
+“.”字的内码为0x8139ee39,则byte address = GB18030_16_GetData(0x81,0x39,0xee,0x39) *32+ BaseAdd
+word address = byte address / 2 
+****************************************************************************************************/
+u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4) 
+{ 
+	u32 Address=0;						//Address：对应字符点阵在芯片中的字节地址。
+	u32 BaseAdd=0x194FDE; 		//16x16点阵字库起始地址：BaseAdd＝0x194FDE，
+	if(c2==0x7f) 
+	{
+		return (BaseAdd);
+	} 
+	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) //Section 1 
+		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
+	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) //Section 5 
+	{ 
+		if(c2>0x7f)
+			c2--; 
+		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
+	} 
+	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
+		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
+	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) //Section 3 
+	{ 
+		if(c2>0x7f) 
+			c2--;
+		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
+	} 
+	else if(c1>=0xaa && c2<0xa1) //Section 4 
+	{ 
+		if(c2>0x7f) 
+			c2--; 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
 	}
 	else if(c1==0x81 && c2>=0x39) //四字节区1 
 	{ 
-		h =1038 + 21008+(c3-0xEE)*10+c4-0x39; 
+		Address =1038 + 21008+(c3-0xEE)*10+c4-0x39; 
 	} 
 	else if(c1==0x82)//四字节区2 
 	{ 
-		h =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
+		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
 	} 
-	GT32L32_ReadBuffer(h*32+BaseAdd,32,GetBuffer);
-	return(h*32+BaseAdd); 
+	return(Address*32+BaseAdd); 
 }
 
 /*************************************************************************************************** 
@@ -1258,46 +1152,44 @@ word address = byte address / 2
 “.”字的内码为0x8139ee39,则byte address = GB18030_24_GetData(0x81,0x39,0xee,0x39) *72+ BaseAdd
 word address = byte address / 2 
 ****************************************************************************************************/
-u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer) 
+u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4) 
 { 
-	u32 h=0;
-	u32 BaseAdd=0x2743DE; 
+	u32 Address=0;						//Address：对应字符点阵在芯片中的字节地址。
+	u32 BaseAdd=0x2743DE; 		//24x24点阵字库起始地址：BaseAdd＝0x2743DE，
 	if(c2==0x7f) 
 	{
-		GT32L32_ReadBuffer(BaseAdd,72,GetBuffer);
 		return (BaseAdd);
 	} 
 	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) 			//Section 1
-		h= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
+		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
 	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) 	//Section 5
 	{ 
 		if(c2>0x7f) c2--; 
-		h=(c1-0xa8)*96 + (c2-0x40)+846; 
+		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
 	} 
 	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) 			//Section 2
-		h= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
+		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
 	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) 	//Section 3
 	{ 
 		if(c2>0x7f) 
 			c2--;
-		h=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
+		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
 	} 
 	else if(c1>=0xaa && c2<0xa1) 			//Section 4
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		h=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
 	}
 	else if(c1==0x81 && c2>=0x39) 		//四字节区1 
 	{ 
-		h =1038 + 21008+(c3-0xEE)*10+c4-0x39; 
+		Address =1038 + 21008+(c3-0xEE)*10+c4-0x39; 
 	} 
 	else if(c1==0x82)									//四字节区2 
 	{ 
-		h =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
+		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
 	} 
-	GT32L32_ReadBuffer(h*72+BaseAdd,72,GetBuffer);
-	return(h*72+BaseAdd);
+	return(Address*72+BaseAdd);
 }
 
 /*************************************************************************************************** 
@@ -1311,47 +1203,45 @@ u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer)
 则byte address = gt(0xb0,0xa1,0x00,0x00) *128+BaseAdd word address = byte address / 2 
 “.”字的内码为0x8139ee39,则byte address = gt(0x81, 0x39,0xee,0x39) *128+ BaseAdd word address = byte address / 2 
 ****************************************************************************************************/
-u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4,u8 *GetBuffer) 
+u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4) 
 { 
-	u32 h=0;
-	u32  BaseAdd=0x47AE10;
+	u32 Address=0;						//Address：对应字符点阵在芯片中的字节地址。
+	u32  BaseAdd=0x47AE10;		//32x32点阵字库起始地址：BaseAdd＝0x47AE10，
 	if(c2==0x7f) 
 	{
-		GT32L32_ReadBuffer(BaseAdd,128,GetBuffer);
 		return (BaseAdd); 
 	}
 	if(c1>=0xA1 && c1 <= 0xAB && c2>=0xa1) //Section 1 
-		h= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
+		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
 	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) //Section 5 
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		h=(c1-0xa8)*96 + (c2-0x40)+846; 
+		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
 	} 
 	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
-		h= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038-192; 
+		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038-192; 
 	else if(c1<0xa1 && c1>=0x81 && c2>=0x40) //Section 3 
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		h=(c1-0x81)*190 + (c2-0x40) + 1038 +6768-192; 
+		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768-192; 
 	} 
 	else if(c1>=0xaa && c2<0xa1) //Section 4 
 	{ 
 		if(c2>0x7f)
 			c2--;
-		h=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848-192; 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848-192; 
 	} 
 	else if(c1==0x81 && c2>=0x39) //四字节区1 
 	{ 
-		h =1038 + 21008+(c3-0xEE)*10+c4-0x39-192; 
+		Address =1038 + 21008+(c3-0xEE)*10+c4-0x39-192; 
 	} 
 	else if(c1==0x82)//四字节区2 
 	{ 
-		h =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30-192; 
+		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30-192; 
 	} 
-	GT32L32_ReadBuffer(h*128+BaseAdd,128,GetBuffer);
-	return(h*128+BaseAdd);  
+	return(Address*128+BaseAdd);  
 } 
 
 /**********************************************************************
@@ -1545,7 +1435,6 @@ u32 GT32L32_GetAntennaCode_12X12(u8	NUM,u8 *GetBuffer)
 {
 	u32 Address,BaseAdd=0x47AD32;
 	Address=NUM*24+BaseAdd;
-	GT32L32_ReadBuffer(Address,24,GetBuffer);
 	return Address;
 }
 
@@ -1560,7 +1449,6 @@ u32 GT32L32_GetBatteryCode_12X12(u8	NUM,u8 *GetBuffer)
 {
 	u32 Address, BaseAdd=0x47ADAA;
 	Address=BaseAdd+NUM*24;
-	GT32L32_ReadBuffer(Address,24,GetBuffer);
 	return Address;
 }
 /**********************************************************
@@ -1705,7 +1593,6 @@ u32 GT32L32_UNICODE_To_GBK(u16 unicode,u8 *GetBuffer)
 		Address= U_Start_Addr +(unicode-0x4056)*2; 
 	} 
 	Address+=BaseAdd;
-	GT32L32_ReadBuffer(Address,2,GetBuffer);
 	return Address; 
 }
 
@@ -1747,8 +1634,6 @@ u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer)
 	{ 
 		Address=part_addr+((BIG5_MSB-TMP)*157+BIG5_LSB-0xa1+63)*2+BaseAddr; 
 	}
-	GT32L32_ReadBuffer(Address,2,GetBuffer);
-	
 	return Address; 
 }
 
@@ -1787,7 +1672,7 @@ void GT32L32_CS_DisSelect(GT32L32_Init_TypeDef *GT32L32_Init)
 *******************************************************************************/
 void GT32L32_CS_Select(GT32L32_Init_TypeDef *GT32L32_Init)
 {
-	GPIO_SetBits(GT32L32_Init->sGT32L32_CS_PORT,	GT32L32_Init->sGT32L32_CS_PIN);			//使能片选
+	GPIO_ResetBits(GT32L32_Init->sGT32L32_CS_PORT,	GT32L32_Init->sGT32L32_CS_PIN);			//使能片选
 }
 /*******************************************************************************
 *函数名			:	function
@@ -1837,7 +1722,7 @@ void GT32L32_SI_H(GT32L32_Init_TypeDef *GT32L32_Init)
 *******************************************************************************/
 u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init)
 {
-	return GPIO_ReadOutputDataBit(GT32L32_MISO_PORT,GT32L32_MISO_PIN);			//读取MISO数据
+	return GPIO_ReadOutputDataBit(GT32L32_Init->sGT32L32_MOSI_PORT,GT32L32_Init->sGT32L32_MOSI_PIN);			//读取MISO数据
 }
 
 
@@ -1966,12 +1851,10 @@ void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init)
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
 u8 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 *Buffer)
 {
-#ifdef	GT32L32_SPIPORT_EN
 	//____________定义变量
 	u32 i=0;
 //	u8	Status=0XFF;
 	//____________使能片选
-	GPIO_ResetBits(GPIOC,GPIO_Pin_6);
 	GT32L32_CS_Select(GT32L32_Init);
 	Address=Address|0x03000000;		//0x03指令字+地址。
 //	Address=Address|0x0B000000;//0x0B指令字+地址。--快速
@@ -1982,7 +1865,7 @@ u8 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 
 	if((Address&0x0B000000)==0x0B000000)
 		GT32L32_ReadWriteByte(0XFF);						//从字库读出点阵数据到数组中。
 //	while((Status=GT32L32_ReadStatus()&0x01)!=0x01);
-	i=0x0F;
+	i=0xFFFF;
 	while(i--);
 	for(i=0;i<len;i++)
 	{
@@ -1992,29 +1875,6 @@ u8 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 
 	GPIO_SetBits(GPIOC,GPIO_Pin_6);
 	GT32L32_CS_DisSelect(GT32L32_Init);
 	return Buffer[0];	
-#else
-	//____________定义变量
-	u32	j=0;
-	//____________使能片选
-	GT32L32_CS_Select(GT32L32_Init);
-	Address=Address|0x03000000;//0x03指令字+地址。
-//	Address=Address|0x0B000000;//0x0B指令字+地址。--快速
-	//____________发送地址数据	
-	GT32L32_SendByte((Address>>24)	&	0xFF);
-	GT32L32_SendByte((Address>>16)	&	0xFF);
-	GT32L32_SendByte((Address>>8)		&	0xFF);
-	GT32L32_SendByte(Address				&	0xFF);
-	if((Address&0x0B000000)==0x0B000000)
-		GT32L32_SendByte(0XFF);							//从字库读出点阵数据到数组中。
-	//____________接收数据	
-	for(j=0;j<len;j++)
-	{
-	 Buffer[j]=GT32L32_ReadByte();	// 从字库读出点阵数据到数组中。
-	}
-	//____________取消片选
-	GT32L32_CS_DisSelect(GT32L32_Init);
-	return Buffer[0];
-#endif
 }
 
 //=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
@@ -2033,27 +1893,27 @@ u8	GT32L32_ReadWriteByte(u8 Data)
 	//____________定义变量
 	u16 retry=0XFFFF;													//用来进行超时计数
 	//____________等待发送缓冲区为空
-	while (SPI_I2S_GetFlagStatus(GT32L32_SPI_PORT, SPI_I2S_FLAG_BSY) == SET);	
-//	while(SPI_I2S_GetFlagStatus(GT32L32_SPI_PORT, SPI_I2S_FLAG_TXE) == RESET); 		//检查指令SPI发送标志是否为空
-//	{
-//		retry++;
-//		if(retry>2000)
-//			return 0;
-//	}	
+	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);	
+	while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET); 		//检查指令SPI发送标志是否为空
+	{
+		retry++;
+		if(retry>2000)
+			return 0;
+	}	
 	//____________发送数据
-	SPI_I2S_SendData(GT32L32_SPI_PORT, Data);				//发送数据
+	SPI_I2S_SendData(SPI1, Data);				//发送数据
 	//____________等待接收数据
-//	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
+	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
 	retry=0;	
-//	while(SPI_I2S_GetFlagStatus(GT32L32_SPI_PORT, SPI_I2S_FLAG_RXNE) == RESET)		//检查指令SPI接收完成标志设置与否
-//	{
-//		retry++;
-//		if(retry>8000)
-//			return 0;
-//	}
-	while (SPI_I2S_GetFlagStatus(GT32L32_SPI_PORT, SPI_I2S_FLAG_BSY) == SET);
+	while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET)		//检查指令SPI接收完成标志设置与否
+	{
+		retry++;
+		if(retry>8000)
+			return 0;
+	}
+	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
 	//____________返回接收到的数据
-	return SPI_I2S_ReceiveData(GT32L32_SPI_PORT); 			//返回接收到的数据	
+	return SPI_I2S_ReceiveData(SPI1); 			//返回接收到的数据	
 #else					//使用自定义协议
 	u8	dat=0;
 	dat=GT32L32_ReadByte();	
@@ -2113,7 +1973,7 @@ u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init)
 	return dat;
 }
 
-#endif
+
 /*******************	wegam@sina.com	*******************/
 /*********************	2017/01/21	*********************/
 /**********************	END OF FILE	*********************/
