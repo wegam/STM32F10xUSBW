@@ -65,6 +65,7 @@ void GT32L32_CLK_H(GT32L32_Init_TypeDef *GT32L32_Init);
 void GT32L32_SI_L(GT32L32_Init_TypeDef *GT32L32_Init);
 void GT32L32_SI_H(GT32L32_Init_TypeDef *GT32L32_Init);
 u8 GT32L32_SO(GT32L32_Init_TypeDef *GT32L32_Init);
+#if 0
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
@@ -2112,7 +2113,7 @@ u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init)
 	return dat;
 }
 
-
+#endif
 /*******************	wegam@sina.com	*******************/
 /*********************	2017/01/21	*********************/
 /**********************	END OF FILE	*********************/

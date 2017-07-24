@@ -54,6 +54,9 @@ void PC006V20_Configuration(void)
 	//位
 	GPIO_Configuration_OPP50	(GPIOC,		GPIO_Pin_4);			//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度2MHz----V20170605
 	GPIO_Configuration_OPP50	(GPIOC,		GPIO_Pin_5);			//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度2MHz----V20170605
+	
+	GPIO_Configuration_OPP50	(GPIOB,		GPIO_Pin_14);			//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度2MHz----V20170605
+	GPIO_Configuration_OPP50	(GPIOB,		GPIO_Pin_15);			//将GPIO相应管脚配置为PP(推挽)输出模式，最大速度2MHz----V20170605
 
 
 }
@@ -69,47 +72,57 @@ void PC006V20_Configuration(void)
 void PC006V20_Server(void)
 {
 	++Time;	
-//	if(Time>=10000)
+	if(Time<=50)
+	{
+		PB14=0;
+		PB15=1;		
+	}
+	else	if(Time<=100)
+	{
+		PB14=1;
+		PB15=1;				
+	}
+	else	if(Time<=150)
+	{
+		PB14=1;
+		PB15=0;				
+	}
+	else if(Time>1000)	//反转
+	{
+		Time=0;
+	}
+	else
+	{
+		PB14=1;
+		PB15=1;
+	}
+	
+//	if(Time<=100)	//停止
 //	{
 //		PC4=0;
-//		PC5=1;		
+//		PC5=0;
 //	}
-//	else	if(Time>=20000)
-//	{
-//		Time=0;				
-//	}
-//	else
+//	else if((Time>100)&&(Time<=10000))	//正转
 //	{
 //		PC4=1;
 //		PC5=0;
 //	}
-	
-	if(Time<=100)	//停止
-	{
-		PC4=0;
-		PC5=0;
-	}
-	else if((Time>100)&&(Time<=10000))	//正转
-	{
-		PC4=1;
-		PC5=0;
-	}
-	else if((Time>10000)&&(Time<=10100))	//停止
-	{
-		PC4=0;
-		PC5=0;
-	}
-	else if((Time>10100)&&(Time<=20000))	//反转
-	{
-		PC4=0;
-		PC5=1;
-	}
-	else if(Time>20000)	//反转
-	{
-		PC4=0;
-		PC5=0;
-		Time=0;
-	}
+//	else if((Time>10000)&&(Time<=10100))	//停止
+//	{
+//		PC4=0;
+//		PC5=0;
+//	}
+//	else if((Time>10100)&&(Time<=20000))	//反转
+//	{
+//		PC4=0;
+//		PC5=1;
+//	}
+//	else if(Time>20000)	//反转
+//	{
+//		PC4=0;
+//		PC5=0;
+//		Time=0;
+//	}
 }
 
 #endif
