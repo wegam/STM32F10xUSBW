@@ -87,7 +87,7 @@ void PC006V20_Server(void)
 		PB14=1;
 		PB15=0;				
 	}
-	else if(Time>1000)	//反转
+	else if(Time>5000)	//反转
 	{
 		Time=0;
 	}
