@@ -649,16 +649,16 @@ u8  GT32L32_GetDig_Info(u8 Sequence,GT32L32_Info_TypeDef *GT32L32_Info)
 	//____________配置数据
 	switch(BaseAddr)
 	{
-	case 0x112400:	address=Sequence * 56+ BaseAddr;
+	case 0x112400:	address=Sequence * 56+ BaseAddr;			//(u32)0x112400,			//14x28数字符号字符
 									len=56;	//GT32L32_ReadBuffer(Sequence * 56+ BaseAdd,56,DZ_Data); 			//14X28
 				break ;
-	case 0x112748: 	address=Sequence * 120+ BaseAddr;
+	case 0x112748: 	address=Sequence * 120+ BaseAddr;			//(u32)0x112748,			//20x40数字符号字符
 									len=120;//GT32L32_ReadBuffer(Sequence * 120+ BaseAdd,120,DZ_Data); 		//20X40
 				break ;
-	case 0x112CE8: 	address=Sequence * 114+ BaseAddr+2;
+	case 0x112CE8: 	address=Sequence * 114+ BaseAddr+2;		//(u32)0x112CE8,			//28点阵不等宽数字符号字符
 									len=112;//GT32L32_ReadBuffer(Sequence * 114+ BaseAdd+2,112,DZ_Data); 	//28X28
 				break ;
-	case 0x113396: 	address=Sequence * 202+ BaseAddr+2;
+	case 0x113396: 	address=Sequence * 202+ BaseAddr+2;		//(u32)0x113396,			//40点阵不等宽数字符号字符
 									len=200;//GT32L32_ReadBuffer(Sequence * 202+ BaseAdd+2,200,DZ_Data); 	//40X40
 				break ;  
 	default:       break ;
@@ -896,86 +896,98 @@ u8 GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info)
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
-*输入				: 
-*返回值			:	无
+*输入				: 4字节汉字内码通过参数c1,c2,c3,c4传入，双字节内码通过参数c1,c2 传入，c3=0,c4=0 
+*返回值			:	汉字点阵的字节地址(Address)。
 *******************************************************************************/
 u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4)
 {
-	u32 len=0;
-	u32 Address=0;
+	u32 len=0;			//汉字点阵的数据长度
+	u32 Address=0;	//汉字点阵的字节地址(Address)
 	u32 BaseAddr=0;
-	
-	//字体大小判断
-			if(font==12)
-			{
-				BaseAddr=GB18030_BaseAddr_hz12x12;
-			}
-			else if(font==16)
-			{
-				BaseAddr=GB18030_BaseAddr_hz16x16;
-			}
-			else if(font==24)
-			{
-				BaseAddr=GB18030_BaseAddr_hz24x24;
-			}
-			else if(font==32)
-			{
-				BaseAddr=GB18030_BaseAddr_hz32x32;
-			}
-			
-				//____________字体判断
-	switch(BaseAddr)
+	//判断单字节与双字节字符（汉字通常为双字节）
+	if(c1>0x80)				//双字节，ASCII码表为（0x00~0x7F)
 	{
-		case	GB18030_BaseAddr_zf12x12	:		len=24;
-					break;
-		case	GB18030_BaseAddr_zf16x16	:		len=32;
-					break;
-		case	GB18030_BaseAddr_zf24x24	:		len=72;
-					break;
-		case	GB18030_BaseAddr_zf32x32	:		len=128;
-					break;
-		default: 
-					break ;
+		//字体大小判断
+		if(font==12)				//(u32)0x113D0E,			//12x12点阵GB18030汉字/
+		{
+			Address=GT32L32_GetGB18030_12(c1,	c2,	c3,	c4);
+		}
+		else if(font==16)		//(u32)0x194FDE,			//16x16点阵GB18030汉字
+		{
+			Address=GT32L32_GetGB18030_16(c1,	c2,	c3,	c4);
+		}
+		else if(font==24)		//(u32)0x2743DE,			//24x24点阵GB18030汉字
+		{
+			Address=GT32L32_GetGB18030_24(c1,	c2,	c3,	c4);
+		}
+		else if(font==32)		//(u32)0x47AE10,			//32x32点阵GB18030汉字
+		{
+			Address=GT32L32_GetGB18030_32(c1,	c2,	c3,	c4);
+		}
 	}
-			
-//	u32 BaseAdd=0x194FDE; 
-	if(c2==0x7f) 
+	else							//单字节，ASCII码表为（0x00~0x7F)
 	{
-		return (0);
-	} 
-	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) //Section 1 
-		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
-	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) //Section 5 
-	{ 
-		if(c2>0x7f)
-			c2--; 
-		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
-	} 
-	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
-		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
-	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) //Section 3 
-	{ 
-		if(c2>0x7f) 
-			c2--;
-		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
-	} 
-	else if(c1>=0xaa && c2<0xa1) //Section 4 
-	{ 
-		if(c2>0x7f) 
-			c2--; 
-		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
-	}
-	else if(c1==0x81 && c2>=0x39) //四字节区1 
-	{ 
-		Address =1038 + 21008+(c3-0xEE)*10+c4-0x39; 
-	} 
-	else if(c1==0x82)//四字节区2 
-	{ 
-		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
-	} 
-//	GT32L32_ReadBuffer(Address*32+BaseAddr,32,GetBuffer);
-	return(Address*32+BaseAddr);
-
+		if  ((c1 >0x20)&&(c1<=0x7e))		//ASCIICode ASCII码表为（0x00~0x7F)	（0x00~0x20为控制符)
+		{	
+			switch(font)
+			{
+				case 0x100000:	Address=(c1-0x20)*8+BaseAddr;		//(u32)0x100000,			//5x7点阵ASCII标准字符
+												len=8;//GT32L32_ReadBuffer((ASCIICode-0x20)*8+BaseAdd,8,DZ_Data); //5X7
+							break ;
+				case 0x100300:	Address=(c1-0x20)*8+BaseAddr;		//(u32)0x100300,			//7x8点阵ASCII标准字符
+												len=8;//GT32L32_ReadBuffer((ASCIICode-0x20)*8+BaseAdd,8,DZ_Data); //7X8
+							break ;
+				case 0x100600:	Address=(c1-0x20)*8+BaseAddr;		//(u32)0x100600,			//7x8点阵ASCII粗体字符
+												len=8;//GT32L32_ReadBuffer((ASCIICode-0x20)*8+BaseAdd,8,DZ_Data); //7X8 Fat
+							break ;
+				case 0x100900:	Address=(c1-0x20)*12+BaseAddr;		//(u32)0x100900,			//6x12点阵ASCII字符
+												len=12;//GT32L32_ReadBuffer((ASCIICode-0x20)*12+BaseAdd,12,DZ_Data); //6X12 
+							break ;
+				case 0x100D80:	Address=(c1-0x20)*16+BaseAddr;		//(u32)0x100D80,			//8x16点阵ASCII标准字符
+												len=16;//GT32L32_ReadBuffer((ASCIICode-0x20)*16+BaseAdd,16,DZ_Data); //8X16
+							break ;  
+				case 0x101580:	Address=(c1-0x20)*16+BaseAddr;		//(u32)0x101580,			//8x16点阵ASCII粗体字符
+												len=16;//GT32L32_ReadBuffer((ASCIICode-0x20)*16+BaseAdd,16,DZ_Data); // 8X16 Fat 
+							break ;
+				case 0x101B80:	Address=(c1-0x20)*48+BaseAddr;		//(u32)0x101B80,			//12x24点阵ASCII标准字符
+												len=48;//GT32L32_ReadBuffer((ASCIICode-0x20)*48+BaseAdd,48,DZ_Data); //12X24
+							break ;  
+				case 32: 				Address=(c1-0x20)*64+0x102D80;		//(u32)0x102D80,			//16x32点阵ASCII标准字符
+												len=64;//GT32L32_ReadBuffer((ASCIICode-0x20)*64+BaseAdd,64,DZ_Data); //16X32
+							break ;
+				case 0x104580: 	Address=(c1-0x20)*64+BaseAddr;		//(u32)0x104580,			//16x32点阵ASCII粗体字符
+												len=64;//GT32L32_ReadBuffer((ASCIICode-0x20)*64+BaseAdd,64,DZ_Data); //16X32 Fat
+							break ;
+				case 0x105D80: 	Address=(c1-0x20)*26+BaseAddr+2;		//(u32)0x105D80,			//12点阵不等宽ASCII方头（Arial）字符
+												len=24;//GT32L32_ReadBuffer((ASCIICode-0x20)*26+BaseAdd+2,24,DZ_Data); //12X12 A 
+							break ;
+				case 0x106740: 	Address=(c1-0x20)*34+BaseAddr+2;		//(u32)0x106740,			//16点阵不等宽ASCII方头（Arial）字符
+												len=32;//GT32L32_ReadBuffer((ASCIICode-0x20)*34+BaseAdd+2,32,DZ_Data); //16X16 Arial
+							break ; 
+				case 0x107400: 	Address=(c1-0x20)*74+BaseAddr+2;		//(u32)0x107400,			//24点阵不等宽ASCII方头（Arial）字符
+												len=72;//GT32L32_ReadBuffer((ASCIICode-0x20)*74+BaseAdd+2,72,DZ_Data); //24X24 
+							break ;
+				case 0x108FC0: 	Address=(c1-0x20)*130+BaseAddr+2;		//(u32)0x108FC0,			//32点阵不等宽ASCII方头（Arial）字符
+												len=128;//GT32L32_ReadBuffer((ASCIICode-0x20)*130+BaseAdd+2,128,DZ_Data); //32X32 
+							break ;
+				case 12: 	Address=(c1-0x20)*26+0x10C080+2;		//(u32)0x10C080,			//12点阵不等宽ASCII白正（Times New Roman）字符
+												len=24;//GT32L32_ReadBuffer((ASCIICode-0x20)*26+BaseAdd+2,24,DZ_Data); //12X12 T 
+							break ;
+				case 16: 	Address=(c1-0x20)*34+0x10CA50+2;		//(u32)0x10CA50,			//16点阵不等宽ASCII白正（Times New Roman）字符
+												len=32;//GT32L32_ReadBuffer((ASCIICode-0x20)*34+BaseAdd+2,32,DZ_Data); //16X16 T
+							break ;
+				case 24: 	Address=(c1-0x20)*74+0x10D740+2;		//(u32)0x10D740,			//24点阵不等宽ASCII白正（Times New Roman）字符
+												len=72;//GT32L32_ReadBuffer((ASCIICode-0x20)*74+BaseAdd+2,72,DZ_Data); //24X24 T 
+							break ;
+				case 35: 	Address=(c1-0x20)*130+0x10F340+2;		//(u32)0x10F340,			//32点阵不等宽ASCII白正（Times New Roman）字符
+												len=128;//GT32L32_ReadBuffer((ASCIICode-0x20)*130+BaseAdd+2,128,DZ_Data); //32X32 T 
+							break ;  
+				default: 
+							break ;
+			}
+		}	
+	}	
+	return(Address);
 }
 
 /*************************************************************************************************** 
@@ -994,47 +1006,50 @@ word address = byte address / 2
 word address = byte address / 2 
 ****************************************************************************************************/
 u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4) 
-{ 
-	
-		u32 lengh=0;
-	u32 Address=0;
-	u32 BaseAddr=0;
-	
-	//字体大小判断
-			if(font==12)
-			{
-				BaseAddr=GB18030_BaseAddr_hz12x12;
-			}
-			else if(font==16)
-			{
-				BaseAddr=GB18030_BaseAddr_hz16x16;
-			}
-			else if(font==24)
-			{
-				BaseAddr=GB18030_BaseAddr_hz24x24;
-			}
-			else if(font==32)
-			{
-				BaseAddr=GB18030_BaseAddr_hz32x32;
-			}
-			
-				//____________字体判断
-	switch(BaseAddr)
-	{
-		case	GB18030_BaseAddr_zf12x12	:		lengh=24;
-					break;
-		case	GB18030_BaseAddr_zf16x16	:		lengh=32;
-					break;
-		case	GB18030_BaseAddr_zf24x24	:		lengh=72;
-					break;
-		case	GB18030_BaseAddr_zf32x32	:		lengh=128;
-					break;
-		default: 
-					break ;
+{	
+	u32 lengh=0;
+	//判断单字节与双字节字符（汉字通常为双字节）
+	if(c1>0x80)				//双字节，ASCII码表为（0x00~0x7F)
+	{	
+		//字体大小判断
+		if(font==12)
+		{
+			lengh=24;		//2(列）x12（行）
+		}
+		else if(font==16)
+		{
+			lengh=32;		//2(列）x16（行）
+		}
+		else if(font==24)
+		{
+			lengh=72;		//3(列）x24（行）
+		}
+		else if(font==32)
+		{
+			lengh=128;	//4(列）x32（行）
+		}
 	}
-	return lengh;
-	
-	 
+	else
+	{
+		//字体大小判断
+		if(font==12)
+		{
+			lengh=24;		//2(列）x12（行）
+		}
+		else if(font==16)
+		{
+			lengh=32;		//2(列）x16（行）
+		}
+		else if(font==24)
+		{
+			lengh=72;		//3(列）x24（行）
+		}
+		else if(font==32)
+		{
+			lengh=128/2;	//4(列）x32（行）
+		}
+	}
+	return lengh;	 
 }
 /*************************************************************************************************** 
 12x12点阵GB18030汉字&字符
@@ -1164,7 +1179,8 @@ u32 GT32L32_GetGB18030_24(u8 c1, u8 c2, u8 c3, u8 c4)
 		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
 	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) 	//Section 5
 	{ 
-		if(c2>0x7f) c2--; 
+		if(c2>0x7f)
+			c2--; 
 		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
 	} 
 	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) 			//Section 2
@@ -1209,37 +1225,37 @@ u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4)
 	u32  BaseAdd=0x47AE10;		//32x32点阵字库起始地址：BaseAdd＝0x47AE10，
 	if(c2==0x7f) 
 	{
-		return (BaseAdd); 
-	}
-	if(c1>=0xA1 && c1 <= 0xAB && c2>=0xa1) //Section 1 
+		return (BaseAdd);
+	} 
+	if(c1>=0xA1 && c1 <= 0xa9 && c2>=0xa1) 			//Section 1
 		Address= (c1 - 0xA1) * 94 + (c2 - 0xA1); 
-	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) //Section 5 
+	else if(c1>=0xa8 && c1 <= 0xa9 && c2<0xa1) 	//Section 5
 	{ 
-		if(c2>0x7f) 
+		if(c2>0x7f)
 			c2--; 
 		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
 	} 
-	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
-		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038-192; 
-	else if(c1<0xa1 && c1>=0x81 && c2>=0x40) //Section 3 
+	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) 			//Section 2
+		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)	+	1038; 
+	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) 	//Section 3
+	{ 
+		if(c2>0x7f) 
+			c2--;
+		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +	6768;
+	} 
+	else if(c1>=0xaa && c2<0xa1) 			//Section 4
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768-192; 
-	} 
-	else if(c1>=0xaa && c2<0xa1) //Section 4 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +	12848; 
+	}
+	else if(c1==0x81 && c2>=0x39) 		//四字节区1 
 	{ 
-		if(c2>0x7f)
-			c2--;
-		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848-192; 
+		Address =1038 + 21008+(c3-0xEE)*10+c4-0x39; 
 	} 
-	else if(c1==0x81 && c2>=0x39) //四字节区1 
+	else if(c1==0x82)									//四字节区2 
 	{ 
-		Address =1038 + 21008+(c3-0xEE)*10+c4-0x39-192; 
-	} 
-	else if(c1==0x82)//四字节区2 
-	{ 
-		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30-192; 
+		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
 	} 
 	return(Address*128+BaseAdd);  
 } 

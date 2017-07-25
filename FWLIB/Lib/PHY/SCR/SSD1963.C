@@ -728,7 +728,6 @@ void SSD1963_ShowCharGT(
 		return ;
 	}
 	SSD1963_DC_Data;					//数据/命令切换	//1-数据，0-命令
-//	SSD1963_WR_Write; 		//0--写开启，1--写关闭
 	for(i=0;i<num;i++)
 	{ 
 		temp=Buffer[i];		 					//调用1608字体--二维数组形式--字库使用时取消  
@@ -736,20 +735,15 @@ void SSD1963_ShowCharGT(
 		{
 			if((temp&0x80)==0X80)
 			{
-				SSD1963_POINT_COLOR=SSD1963_BRED;
+				colortemp=SSD1963_POINT_COLOR;//SSD1963_POINT_COLOR
 			}
 			else
-				SSD1963_POINT_COLOR=SSD1963_BACK_COLOR;
-			
-			SSD1963_WR_Write; 		//0--写开启，1--写关闭
-			GPIO_Write(SSD1963_sPinfo->SSD1963_sDATABUS_PORT,SSD1963_POINT_COLOR);
-			SSD1963_WR_Read; 			//0--写开启，1--写关闭
+				colortemp=SSD1963_BACK_COLOR;
+
+			SSD1963_WR_DATA(colortemp);
 			temp=temp<<1;
 		}
 	}	
-//	SSD1963_WR_Read; 		//0--写开启，1--写关闭
-	SSD1963_POINT_COLOR=colortemp;	
-	
 }
 //#else
 /*******************************************************************************
@@ -782,8 +776,10 @@ void SSD1963_ShowChar(u16 x,u16 y,u8 num,u8 mode)
 //			temp=code_num_1608[(u16)num*16+pos];		 //调用1608字体
 			for(t=0;t<8;t++)
 			{                 
-				if(temp&0x01)SSD1963_POINT_COLOR=colortemp;
-				else SSD1963_POINT_COLOR=SSD1963_BACK_COLOR;
+				if(temp&0x01)
+					SSD1963_POINT_COLOR=colortemp;
+				else
+					SSD1963_POINT_COLOR=SSD1963_BACK_COLOR;
 				SSD1963_WR_DATA(SSD1963_POINT_COLOR);	
 				temp>>=1; 
 				x++;

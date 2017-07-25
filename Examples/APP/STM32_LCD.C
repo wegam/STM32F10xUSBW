@@ -67,9 +67,14 @@ void STM32_LCD_Configuration(void)
 //	GT32L32_Configuration();
 	SSD1963_PrintfString(0,16,"SD_TYPE IS SD_TYPE_V2HC");		//后边的省略号就是可变参数
 //	LCD_PrintfStringGT(0,32,32,"后边的省略号就是可变参数~!@#$%^&*()_+{}:<>?|");		//后边的省略号就是可变参数
-	LCD_PrintfStringGT(10,64,32,"A");							//后边的省略号就是可变参数
-	LCD_PrintfStringGT(0,64,32,"1234567890SD_TYPE IS SD_TYPE_V2HC54");							//后边的省略号就是可变参数
+	LCD_PrintfStringGT(10,120,24,"我后边的省略号就是可变参数啊");							//后边的省略号就是可变参数
+	LCD_PrintfStringGT(10,144,24,"我后边的省略号就是可变参数啊");							//后边的省略号就是可变参数
+	LCD_PrintfStringGT(10,168,32,"我后边的省略号就是可变参数啊");							//后边的省略号就是可变参数
+//	LCD_PrintfStringGT(10,120,32,"A");							//后边的省略号就是可变参数
+//	LCD_PrintfStringGT(0,260,32,"1234567890SD_TYPE IS SD_TYPE_V2HC54");							//后边的省略号就是可变参数
+	LCD_PrintfStringGT(0,260,32,"TYPE");							//后边的省略号就是可变参数
 	SSD1963_DrawCircle(400,240,100);
+//	SSD1963_PrintfString(0,300,"SD_TYPE IS SD_TYPE_V2HC");		//后边的省略号就是可变参数
 //	LCD_PrintfStringGT(300,230,32,"%02d-%02d-%02d-%03d",hour,min,second,millisecond);			//后边的省略号就是可变参数
 //	LCD_PrintfStringGT(0,256,32,"运行计时：");		//后边的省略号就是可变参数
 //	LCD_PrintfStringGT(300,256,32,"%02d:%02d:%02d:%02d",hour,min,second,millisecond);		//后边的省略号就是可变参数
@@ -79,7 +84,7 @@ void STM32_LCD_Configuration(void)
 	
 	IWDG_Configuration(1000);													//独立看门狗配置---参数单位ms
 	
-	PWM_OUT(TIM2,PWM_OUTChannel1,5000,20);						//PWM设定-20161127版本
+	PWM_OUT(TIM2,PWM_OUTChannel1,5000,10);						//PWM设定-20161127版本
 	
 	SSD1963_DrawRectangle(10,10,790,470);
 	
@@ -115,12 +120,12 @@ void STM32_LCD_Server(void)
 				{
 					hour=0;
 				}
-//				LCD_PrintfStringGT(300,230,32,"%02d",hour);		//后边的省略号就是可变参数
+				LCD_PrintfStringGT(300,230,32,"%02d",hour);		//后边的省略号就是可变参数
 				
 			}
-//			LCD_PrintfStringGT(348,230,32,"%02d",min);		//后边的省略号就是可变参数
+			LCD_PrintfStringGT(348,230,32,"%02d",min);		//后边的省略号就是可变参数
 		}
-//		LCD_PrintfStringGT(396,230,32,"%02d",second);		//后边的省略号就是可变参数
+		LCD_PrintfStringGT(396,230,32,"%02d",second);		//后边的省略号就是可变参数
 		while(delat--);
 //		LCD_PrintfStringGT(50,400,24,"%02d-秒",second);		//后边的省略号就是可变参数
 //		TM1618_DIS();
@@ -302,10 +307,13 @@ unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...)				/
 		
 		if(dst>0x80)		//双字节--汉字
 		{
+			u32 Address=0;	//汉字点阵的字节地址(Address)
+			u32 lengh=0;			//汉字点阵的数据长度
 			u16 word=dst<<8;
 			Char_Buffer++;
 			dst=*Char_Buffer;
 			word=word|dst;
+			
 			//显示超限判断
 			if(x>LCD_W-16)
 			{
@@ -318,30 +326,37 @@ unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...)				/
 				SSD1963_Clear(SSD1963_RED);
 			}
 			//字体大小判断
-			if(font==12)
-			{
-				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz12x12;
-			}
-			else if(font==16)
-			{
-				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz16x16;
-			}
-			else if(font==24)
-			{
-				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz24x24;
-			}
-			else if(font==32)
-			{
-				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz32x32;
-			}
+//			if(font==12)
+//			{
+//				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz12x12;
+//			}
+//			else if(font==16)
+//			{
+//				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz16x16;
+//			}
+//			else if(font==24)
+//			{
+//				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz24x24;
+//			}
+//			else if(font==32)
+//			{
+//				GT32L32_Info.GT32L32_BaseAddr=GB18030_BaseAddr_hz32x32;
+//			}
 			
-			GT32L32_Get_Info(word,&GT32L32_Info);		//获取字符地址和点阵长度
+//			GT32L32_Get_Info(word,&GT32L32_Info);		//获取字符地址和点阵长度
 			
-			char_GT32L32 = (unsigned char*)malloc(GT32L32_Info.GT32L32_BufferSize);
-			
-			GT32L32_ReadBuffer(&GT32L32_Init,GT32L32_Info.GT32L32_Address,GT32L32_Info.GT32L32_BufferSize,GTBuffer);	//从字库中读数据函数
-			SSD1963_ShowCharGT(x,y,font,GT32L32_Info.GT32L32_BufferSize,GTBuffer);
-			
+//			char_GT32L32 = (unsigned char*)malloc(GT32L32_Info.GT32L32_BufferSize);
+//			
+//			GT32L32_ReadBuffer(&GT32L32_Init,GT32L32_Info.GT32L32_Address,GT32L32_Info.GT32L32_BufferSize,GTBuffer);	//从字库中读数据函数
+//			SSD1963_ShowCharGT(x,y,font,GT32L32_Info.GT32L32_BufferSize,GTBuffer);
+				//获取汉字点阵地址
+				Address	=	GT32L32_GetAddress(font, word>>8, word, 0, 0);//获取地址
+				//获取汉字点阵数据长度
+				lengh= GT32L32_GetBufferLen(font, word>>8, word, 0, 0);//获取长度
+				//获取点阵数据
+				GT32L32_ReadBuffer(&GT32L32_Init,Address,lengh,GTBuffer);	//从字库中读数据函数
+				SSD1963_ShowCharGT(x,y,font,lengh,GTBuffer);
+				
 			if(font==12)
 			{
 				x+=12;
@@ -359,12 +374,15 @@ unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...)				/
 				x+=32;
 			}
 			Char_Buffer++;
-			num--;
-			num--;			
-			free(char_GT32L32);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
+			num--;num--;		//双字节，减两次
+						
+//			free(char_GT32L32);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
 		}
 		else		//单字节
 		{
+			u32 Address=0;	//汉字点阵的字节地址(Address)
+			u32 lengh=0;			//汉字点阵的数据长度
+			
 			if(x>LCD_W-16)
 			{
 				x=0;
@@ -378,29 +396,36 @@ unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...)				/
 		
 			if(font==12)
 			{
-				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zfs16x32;
+				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zf6x12;		//(u32)0x100900,			//6x12点阵ASCII字符
 			}
 			else if(font==16)
 			{
-				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zfs16x32;
+				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zfs8x16;		//(u32)0x100D80,			//8x16点阵ASCII标准字符
 			}
 			else if(font==24)
 			{
-				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zfs16x32;
+				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zf12x24;			//(u32)0x101B80,			//12x24点阵ASCII标准字符
 			}
 			else if(font==32)
 			{
-				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zfs16x32;
+				GT32L32_Info.GT32L32_BaseAddr=ASCII_BaseAddr_zfs16x32;		//(u32)0x102D80,			//16x32点阵ASCII标准字符
 			}
 			
 			
 			
-			GT32L32_Get_Info(dst,&GT32L32_Info);	//获取字符地址和点阵长度
+//			GT32L32_Get_Info(dst,&GT32L32_Info);	//获取字符地址和点阵长度			
+//			char_GT32L32 = (unsigned char*)malloc(GT32L32_Info.GT32L32_BufferSize);			
+//			GT32L32_ReadBuffer(&GT32L32_Init,GT32L32_Info.GT32L32_Address,GT32L32_Info.GT32L32_BufferSize,GTBuffer);	//从字库中读数据函数
+//			SSD1963_ShowCharGT(x,y,font,GT32L32_Info.GT32L32_BufferSize,GTBuffer);
+//			free(char_GT32L32);		//发送完成后注意应该释放缓冲区：free(Char_Buffer);
 			
-			char_GT32L32 = (unsigned char*)malloc(GT32L32_Info.GT32L32_BufferSize);
-			
-			GT32L32_ReadBuffer(&GT32L32_Init,GT32L32_Info.GT32L32_Address,GT32L32_Info.GT32L32_BufferSize,GTBuffer);	//从字库中读数据函数
-			SSD1963_ShowCharGT(x,y,font,GT32L32_Info.GT32L32_BufferSize,GTBuffer);
+			//获取汉字点阵地址
+			Address	=	GT32L32_GetAddress(font, dst, 0, 0, 0);//获取地址
+			//获取汉字点阵数据长度
+			lengh= GT32L32_GetBufferLen(font, dst, 0, 0, 0);//获取长度
+			//获取点阵数据
+			GT32L32_ReadBuffer(&GT32L32_Init,Address,lengh,GTBuffer);	//从字库中读数据函数
+			SSD1963_ShowCharGT(x,y,font,lengh,GTBuffer);
 			
 			if(font==12)
 			{
@@ -421,7 +446,7 @@ unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...)				/
 			
 			Char_Buffer++;
 			num--;
-			free(char_GT32L32);		//发送完成后注意应该释放缓冲区：free(Char_Buffer);
+//			free(char_GT32L32);		//发送完成后注意应该释放缓冲区：free(Char_Buffer);
 		}
 		
 //		LCD_ShowCharGT(x,y,1,STM32_DSP_Buffer);
@@ -434,7 +459,7 @@ unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...)				/
 	}
 	//9)**********DMA发送完成后注意应该释放缓冲区：free(USART_BUFFER);
 	Char_Buffer-=BufferSize;
-	free(Char_Buffer);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
+//	free(Char_Buffer);		//发送完成后注意应该释放缓冲区：free(Char_Buffer); 
 	return BufferSize;
 }
 
