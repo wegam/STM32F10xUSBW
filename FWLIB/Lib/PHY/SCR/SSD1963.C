@@ -579,23 +579,36 @@ void SSD1963_DrawLine(
 	int incx,incy,uRow,uCol; 
 
 	delta_x=x2-x1; //计算坐标增量 
-	delta_y=y2-y1; 
+	delta_y=y2-y1;
+	
 	uRow=x1; 
 	uCol=y1; 
-	if(delta_x>0)incx=1; //设置单步方向 
-	else if(delta_x==0)incx=0;//垂直线 
-	else {incx=-1;delta_x=-delta_x;} 
+	
+	if(delta_x>0)
+		incx=1; //设置单步方向 
+	else if(delta_x==0)
+		incx=0;//垂直线 
+	else
+	{
+		incx=-1;
+		delta_x=-delta_x;
+	}
+	
 	if(delta_y>0)
 		incy=1; 
 	else if(delta_y==0)
 		incy=0;//水平线 
 	else
-		{incy=-1;delta_y=-delta_y;} 
+	{
+			incy=-1;
+			delta_y=-delta_y;
+	} 
 		
 	if( delta_x>delta_y)
 		distance=delta_x; //选取基本增量坐标轴 
 	else
 		distance=delta_y; 
+	
 	for(t=0;t<=distance+1;t++ )//画线输出 
 	{  
 		SSD1963_DrawPoint(uRow,uCol);//画点 
@@ -628,7 +641,7 @@ void SSD1963_DrawRectangle(
 												u16 y2			//y2
 )
 {
-	SSD1963_DrawLine(x1,y1,x2,y1);
+	SSD1963_DrawLine(x1,y1,x2,y1);		
 	SSD1963_DrawLine(x1,y1,x1,y2);
 	SSD1963_DrawLine(x1,y2,x2,y2);
 	SSD1963_DrawLine(x2,y1,x2,y2);
@@ -675,7 +688,76 @@ void SSD1963_DrawCircle(
 	}
 }
 
-//#ifdef ShowCharAscii		//高通字库测试程序
+
+///*******************************************************************************
+//*函数名		:	LCD_ShowChar
+//*功能描述	:	在指定位置显示一个字符
+//*输入			: x,y		:起点坐标
+//						font	:字体大小
+//						num		:要显示的字符:" "--->"~"
+//						Buffer	:缓冲
+//*输出			:	无
+//*返回值		:	无
+//*例程			:
+//*******************************************************************************/
+//void SSD1963_ShowCharGT(
+//										u16 x,			//x				:起点x坐标
+//										u16 y,			//y				:起点y坐标
+//										u8 font,		//font		:字体大小
+//										u8 num,			//num			:字节数
+//										u8 *Buffer	//Buffer	:显示的内容缓存
+//)						//高通字库测试程序
+//{
+//	u8 temp;
+//	u8 mode=0;
+//	u8 i,j;
+//	u16 colortemp=SSD1963_POINT_COLOR;
+//	if(font==12)
+//	{
+//		if(x>LCD_W-12||y>LCD_H-12)
+//			return;
+//		SSD1963_Address_set(x,y,x+12-1,y+12-1);      //设置光标位置 
+//	}
+//	else if(font==16)
+//	{
+//		if(x>LCD_W-16||y>LCD_H-16)
+//			return;
+//		SSD1963_Address_set(x,y,x+16-1,y+16-1);      //设置光标位置 
+//	}
+//	else if(font==24)
+//	{
+//		if(x>LCD_W-24||y>LCD_H-24)
+//			return;
+//		SSD1963_Address_set(x,y,x+24-1,y+24-1);      //设置光标位置 
+//	}
+//	else if(font==32)
+//	{
+//		if(x>LCD_W-32||y>LCD_H-32)
+//			return;
+//		SSD1963_Address_set(x,y,x+32-1,y+32-1);      //设置光标位置 
+//	}
+//	else
+//	{
+//		return ;
+//	}
+//	SSD1963_DC_Data;																//数据/命令切换	//1-数据，0-命令
+//	for(i=0;i<num;i++)
+//	{ 
+//		temp=Buffer[i];		 														//调用1608字体--二维数组形式--字库使用时取消  
+//		for(j=0;j<8;j++)
+//		{
+//			if((temp&0x80)==0X80)
+//			{
+//				colortemp=SSD1963_POINT_COLOR;						//SSD1963_POINT_COLOR
+//			}
+//			else
+//				colortemp=SSD1963_BACK_COLOR;
+
+//			SSD1963_WR_DATA(colortemp);
+//			temp=temp<<1;
+//		}
+//	}	
+//}
 /*******************************************************************************
 *函数名		:	LCD_ShowChar
 *功能描述	:	在指定位置显示一个字符
@@ -687,7 +769,7 @@ void SSD1963_DrawCircle(
 *返回值		:	无
 *例程			:
 *******************************************************************************/
-void SSD1963_ShowCharGT(
+void SSD1963_ShowString(
 										u16 x,			//x				:起点x坐标
 										u16 y,			//y				:起点y坐标
 										u8 font,		//font		:字体大小
@@ -705,13 +787,13 @@ void SSD1963_ShowCharGT(
 			return;
 		SSD1963_Address_set(x,y,x+12-1,y+12-1);      //设置光标位置 
 	}
-	if(font==16)
+	else if(font==16)
 	{
 		if(x>LCD_W-16||y>LCD_H-16)
 			return;
 		SSD1963_Address_set(x,y,x+16-1,y+16-1);      //设置光标位置 
 	}
-	if(font==24)
+	else if(font==24)
 	{
 		if(x>LCD_W-24||y>LCD_H-24)
 			return;
@@ -721,21 +803,21 @@ void SSD1963_ShowCharGT(
 	{
 		if(x>LCD_W-32||y>LCD_H-32)
 			return;
-		SSD1963_Address_set(x,y,x+16-1,y+32-1);      //设置光标位置 
+		SSD1963_Address_set(x,y,x+32-1,y+32-1);      //设置光标位置 
 	}
 	else
 	{
 		return ;
 	}
-	SSD1963_DC_Data;					//数据/命令切换	//1-数据，0-命令
+	SSD1963_DC_Data;																//数据/命令切换	//1-数据，0-命令
 	for(i=0;i<num;i++)
 	{ 
-		temp=Buffer[i];		 					//调用1608字体--二维数组形式--字库使用时取消  
+		temp=Buffer[i];		 														//调用1608字体--二维数组形式--字库使用时取消  
 		for(j=0;j<8;j++)
 		{
 			if((temp&0x80)==0X80)
 			{
-				colortemp=SSD1963_POINT_COLOR;//SSD1963_POINT_COLOR
+				colortemp=SSD1963_POINT_COLOR;						//SSD1963_POINT_COLOR
 			}
 			else
 				colortemp=SSD1963_BACK_COLOR;
@@ -743,9 +825,9 @@ void SSD1963_ShowCharGT(
 			SSD1963_WR_DATA(colortemp);
 			temp=temp<<1;
 		}
-	}	
+	}
 }
-//#else
+
 /*******************************************************************************
 *函数名		:	LCD_ShowChar
 *功能描述	:	在指定位置显示一个字符
@@ -911,7 +993,7 @@ void SSD1963_Show2Num(u16 x,u16 y,u16 num,u8 len)
 *返回值		:	无
 *例程			:
 *******************************************************************************/
-unsigned int SSD1963_PrintfString(
+unsigned int SSD1963_PrintfStringbac(
 																	u16 x,u16 y,
 																	const char *format,...
 )								//后边的省略号就是可变参数
@@ -974,6 +1056,8 @@ unsigned int SSD1963_PrintfString(
 //	free(format);		//发送完成后注意应该释放缓冲区：free(Char_Buffer);	
 }
 
+
+
 /*******************************************************************************
 *函数名		:	LCD_ShowString
 *功能描述	:	显示字符串
@@ -984,7 +1068,7 @@ unsigned int SSD1963_PrintfString(
 *返回值		:	无
 *例程			:
 *******************************************************************************/
-void SSD1963_ShowString(
+void SSD1963_ShowStringbac(
 												u16 x,		
 												u16 y,
 												const u8 *p

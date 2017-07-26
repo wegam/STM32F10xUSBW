@@ -255,6 +255,7 @@ u8 	GT32L32_Get_Info(u16 word,GT32L32_Info_TypeDef *GT32L32_Info);						//»ñÈ¡×Ö
 
 u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//»ñÈ¡µØÖ·
 u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4);//»ñÈ¡³¤¶È
+u16  GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u8 font,u16 word,unsigned char *Buffer);		//´Ó×Ö¿âÖÐ¶ÁÊý¾Ýº¯Êý
 
 
 u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4);		//12x12µãÕóGB18030ºº×Ö&×Ö·ûµØÖ·¼ÆËã
@@ -275,7 +276,7 @@ u32 GT32L32_BIG5_To_GBK(u16 BIG5_Code,u8 *GetBuffer);									//BIG5×ªGBK×ª»»Ëã·
 
 u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					//¶ÁÈ¡Ð¾Æ¬×´Ì¬
 void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init);																					//Ì½³ýÓÃ»§ÇøÊý¾Ý
-u8  GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 address,u16 len,unsigned char *Buffer);		//´Ó×Ö¿âÖÐ¶ÁÊý¾Ýº¯Êý
+u8  GT32L32_ReadBufferbac(GT32L32_Init_TypeDef *GT32L32_Init,u32 address,u16 len,unsigned char *Buffer);		//´Ó×Ö¿âÖÐ¶ÁÊý¾Ýº¯Êý
 u8  GT32L32_ReadWriteByte(u8 Data);		//¶ÁÐ´Ò»¸ö×Ö½Ú
 void GT32L32_SendByte(GT32L32_Init_TypeDef *GT32L32_Init,u8 ByteData);		//·¢ËÍÒ»¸ö×Ö½ÚÊý¾Ý,ÏÈ·¢ËÍ¸ßÎ»
 u8 GT32L32_ReadByte(GT32L32_Init_TypeDef *GT32L32_Init);		//¶ÁÒ»¸ö×Ö½Ú,ÏÈ¶Á¸ßÎ»

@@ -952,13 +952,13 @@ u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4)
 				case 0x101B80:	Address=(c1-0x20)*48+BaseAddr;		//(u32)0x101B80,			//12x24点阵ASCII标准字符
 												len=48;//GT32L32_ReadBuffer((ASCIICode-0x20)*48+BaseAdd,48,DZ_Data); //12X24
 							break ;  
-				case 32: 				Address=(c1-0x20)*64+0x102D80;		//(u32)0x102D80,			//16x32点阵ASCII标准字符
+				case 35: 				Address=(c1-0x20)*64+0x102D80;		//(u32)0x102D80,			//16x32点阵ASCII标准字符
 												len=64;//GT32L32_ReadBuffer((ASCIICode-0x20)*64+BaseAdd,64,DZ_Data); //16X32
 							break ;
 				case 0x104580: 	Address=(c1-0x20)*64+BaseAddr;		//(u32)0x104580,			//16x32点阵ASCII粗体字符
 												len=64;//GT32L32_ReadBuffer((ASCIICode-0x20)*64+BaseAdd,64,DZ_Data); //16X32 Fat
 							break ;
-				case 0x105D80: 	Address=(c1-0x20)*26+BaseAddr+2;		//(u32)0x105D80,			//12点阵不等宽ASCII方头（Arial）字符
+				case 12: 	Address=(c1-0x20)*26+0x105D80+2;		//(u32)0x105D80,			//12点阵不等宽ASCII方头（Arial）字符
 												len=24;//GT32L32_ReadBuffer((ASCIICode-0x20)*26+BaseAdd+2,24,DZ_Data); //12X12 A 
 							break ;
 				case 0x106740: 	Address=(c1-0x20)*34+BaseAddr+2;		//(u32)0x106740,			//16点阵不等宽ASCII方头（Arial）字符
@@ -970,7 +970,7 @@ u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4)
 				case 0x108FC0: 	Address=(c1-0x20)*130+BaseAddr+2;		//(u32)0x108FC0,			//32点阵不等宽ASCII方头（Arial）字符
 												len=128;//GT32L32_ReadBuffer((ASCIICode-0x20)*130+BaseAdd+2,128,DZ_Data); //32X32 
 							break ;
-				case 12: 	Address=(c1-0x20)*26+0x10C080+2;		//(u32)0x10C080,			//12点阵不等宽ASCII白正（Times New Roman）字符
+				case 121: 	Address=(c1-0x20)*26+0x10C080+2;		//(u32)0x10C080,			//12点阵不等宽ASCII白正（Times New Roman）字符
 												len=24;//GT32L32_ReadBuffer((ASCIICode-0x20)*26+BaseAdd+2,24,DZ_Data); //12X12 T 
 							break ;
 				case 16: 	Address=(c1-0x20)*34+0x10CA50+2;		//(u32)0x10CA50,			//16点阵不等宽ASCII白正（Times New Roman）字符
@@ -979,7 +979,7 @@ u32 GT32L32_GetAddress(u8 font, u8 c1, u8 c2, u8 c3, u8 c4)
 				case 24: 	Address=(c1-0x20)*74+0x10D740+2;		//(u32)0x10D740,			//24点阵不等宽ASCII白正（Times New Roman）字符
 												len=72;//GT32L32_ReadBuffer((ASCIICode-0x20)*74+BaseAdd+2,72,DZ_Data); //24X24 T 
 							break ;
-				case 35: 	Address=(c1-0x20)*130+0x10F340+2;		//(u32)0x10F340,			//32点阵不等宽ASCII白正（Times New Roman）字符
+				case 32: 	Address=(c1-0x20)*130+0x10F340+2;		//(u32)0x10F340,			//32点阵不等宽ASCII白正（Times New Roman）字符
 												len=128;//GT32L32_ReadBuffer((ASCIICode-0x20)*130+BaseAdd+2,128,DZ_Data); //32X32 T 
 							break ;  
 				default: 
@@ -1046,7 +1046,7 @@ u32 GT32L32_GetBufferLen(u8 font, u8 c1, u8 c2, u8 c3, u8 c4)
 		}
 		else if(font==32)
 		{
-			lengh=128/2;	//4(列）x32（行）
+			lengh=128;	//4(列）x32（行）
 		}
 	}
 	return lengh;	 
@@ -1078,7 +1078,7 @@ u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4)
 	{ 
 		if(c2>0x7f)
 			c2--; 
-		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
+		Address=(c1-0xa8)*96 + (c2-0x40)+846-192; 
 	} 
 	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) //Section 2 
 			Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)+1038; 
@@ -1086,13 +1086,13 @@ u32 GT32L32_GetGB18030_12(u8 c1, u8 c2, u8 c3, u8 c4)
 	{ 
 		if(c2>0x7f) 
 			c2--;
-		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768;
+		Address=(c1-0x81)*190 + (c2-0x40) + 1038 +6768-192;
 	} 
 	else if(c1>=0xaa && c2<0xa1) //Section 4 
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848-192; 
 	} 
 	return(Address*24+BaseAdd); 
 }
@@ -1139,7 +1139,7 @@ u32 GT32L32_GetGB18030_16(u8 c1, u8 c2, u8 c3, u8 c4)
 	{ 
 		if(c2>0x7f) 
 			c2--; 
-		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848; 
+		Address=(c1-0xaa)*96 + (c2-0x40) + 1038 +12848-192; 
 	}
 	else if(c1==0x81 && c2>=0x39) //四字节区1 
 	{ 
@@ -1233,10 +1233,11 @@ u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4)
 	{ 
 		if(c2>0x7f)
 			c2--; 
-		Address=(c1-0xa8)*96 + (c2-0x40)+846; 
+		Address=(c1-0xa8)*96 + (c2-0x40)+846-192; 
 	} 
 	if(c1>=0xb0 && c1 <= 0xf7 && c2>=0xa1) 			//Section 2
-		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)	+	1038; 
+		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1)	+	1038-192; 
+//		Address= (c1 - 0xB0) * 94 + (c2 - 0xA1);
 	else if(c1<0xa1 && c1>=0x81 && c2>=0x40 ) 	//Section 3
 	{ 
 		if(c2>0x7f) 
@@ -1257,6 +1258,7 @@ u32 GT32L32_GetGB18030_32(u8 c1, u8 c2, u8 c3, u8 c4)
 	{ 
 		Address =1038 + 21008+161+(c2-0x30)*1260+(c3-0x81)*10+c4-0x30; 
 	} 
+//	return (BaseAdd);
 	return(Address*128+BaseAdd);  
 } 
 
@@ -1865,7 +1867,7 @@ void GT32L32_ChipErase(GT32L32_Init_TypeDef *GT32L32_Init)
 //->调用函数		:
 //->被调用函数	:
 //<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
-u8 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 *Buffer)
+u8 GT32L32_ReadBufferbac(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 *Buffer)
 {
 	//____________定义变量
 	u32 i=0;
@@ -1891,6 +1893,68 @@ u8 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u32 Address,u16 len,u8 
 	GPIO_SetBits(GPIOC,GPIO_Pin_6);
 	GT32L32_CS_DisSelect(GT32L32_Init);
 	return Buffer[0];	
+}
+//=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>
+//->函数名			:	r_dat_bat
+//->功能描述		:	从字库中读数据函数
+//->输入			: Address  	：	表示字符点阵在芯片中的字节地址。
+//->						len				：	是读点阵数据字节数。
+//->						*Buffer		：	是保存读出的点阵数据的数组。
+//->输出			:	读出的字节
+//->返回值			:	无
+//->例程			:
+//->调用函数		:
+//->被调用函数	:
+//<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
+u16 GT32L32_ReadBuffer(GT32L32_Init_TypeDef *GT32L32_Init,u8 font,u16 word,unsigned char *Buffer)
+{
+	//____________定义变量
+	u32 i=0;
+	u32 Address=0;
+	u32 lengh=0;
+	
+	//区分单双字节
+	if(word>>8>=0x80)
+	{
+		//获取ASCII点阵地址
+		Address	=	GT32L32_GetAddress(font, (u8)(word>>8), (u8)word, 0, 0);		//获取地址
+		//获取ASCII点阵数据长度
+		lengh= GT32L32_GetBufferLen(font, (u8)(word>>8), (u8)word, 0, 0);			//获取长度
+	}
+	else
+	{
+		//获取ASCII点阵地址
+		Address	=	GT32L32_GetAddress(font, (u8)word, 0, 0, 0);		//获取地址
+		//获取ASCII点阵数据长度
+		lengh= GT32L32_GetBufferLen(font, (u8)word, 0, 0, 0);			//获取长度
+	}
+
+	
+	
+	
+	
+	
+	//____________使能片选
+	GT32L32_CS_Select(GT32L32_Init);
+	Address=Address|0x03000000;		//0x03指令字+地址。
+//	Address=Address|0x0B000000;//0x0B指令字+地址。--快速
+	GT32L32_ReadWriteByte(Address>>24);				//发送地址高8位
+	GT32L32_ReadWriteByte(Address>>16);				//发送地址
+	GT32L32_ReadWriteByte(Address>>8);				//发送地址
+	GT32L32_ReadWriteByte(Address);						//发送地址
+	if((Address&0x0B000000)==0x0B000000)
+		GT32L32_ReadWriteByte(0XFF);						//从字库读出点阵数据到数组中。
+//	while((Status=GT32L32_ReadStatus()&0x01)!=0x01);
+	i=0xFFFF;
+	while(i--);
+	for(i=0;i<lengh;i++)
+	{
+		Buffer[i]=GT32L32_ReadWriteByte(0XFF);	//从字库读出点阵数据到数组中。
+	}
+	//____________取消片选	
+	GT32L32_CS_DisSelect(GT32L32_Init);
+	
+	return lengh;	
 }
 
 //=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>=>

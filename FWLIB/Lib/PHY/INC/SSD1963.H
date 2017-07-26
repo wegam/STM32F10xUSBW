@@ -225,6 +225,10 @@ void SSD1963_WR_DATA(unsigned short data);				//写数据
 void SSD1963_WR_COMMAND(unsigned short Command);			//写命令
 
 
+void SSD1963_ShowString(u16 x,u16 y,u8 font,u8 num,u8 *Buffer);		//显示字符串
+void SSD1963_ShowChar(u16 x,u16 y,u8 num,u8 mode);								//显示一个字符
+
+
 
 void SSD1963_DrawPoint(u16 x,u16 y);//画点
 void SSD1963_DrawPoint_big(u16 x,u16 y);//画一个大点
@@ -233,14 +237,16 @@ void SSD1963_DrawCircle(u16 x0,u16 y0,u8 r);
 void SSD1963_DrawLine(u16 x1, u16 y1, u16 x2, u16 y2);						//画直线
 void SSD1963_DrawRectangle(u16 x1, u16 y1, u16 x2, u16 y2);				//画矩形框	   
 void SSD1963_Fill(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color);	//填充--清屏
-void SSD1963_ShowCharGT(u16 x,u16 y,u8 font,u8 num,u8 *Buffer);		//高通字库测试程序
-void SSD1963_ShowChar(u16 x,u16 y,u8 num,u8 mode);								//显示一个字符
+//void SSD1963_ShowCharGT(u16 x,u16 y,u8 font,u8 num,u8 *Buffer);		//高通字库测试程序-----备删除/SSD1963_ShowString
+
+
 void SSD1963_ShowNum(u16 x,u16 y,u32 num,u8 len);									//显示数字
 void SSD1963_ShowEn(u16 x,u16 y,u32 num);													//显示单字节字符
 void SSD1963_Show2Num(u16 x,u16 y,u16 num,u8 len);//显示2个数字串，包含数字
-unsigned int SSD1963_PrintfString(u16 x,u16 y,const char *format,...);			//后边的省略号就是可变参数
 
-void SSD1963_ShowString(u16 x,u16 y,const u8 *p);		 //显示一个字符串,16字体
+unsigned int SSD1963_PrintfStringbac(u16 x,u16 y,const char *format,...);			//后边的省略号就是可变参数
+
+void SSD1963_ShowStringbac(u16 x,u16 y,const u8 *p);		 //显示一个字符串,16字体
  
 void showhanzi(unsigned int x,unsigned int y,unsigned char index);
 void RGB888ToRGB565(unsigned char Color_R,unsigned char Color_G,unsigned char Color_B,u16 *RGB565);			//RGB888转RGB565颜色(分别取高位)

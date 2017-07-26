@@ -125,5 +125,5 @@ extern u8 STM32_SD_GetCSD(void);			//获取CSD信息，返回128位，16字节
 extern u32 STM32_SD_GetCapacity(void);	//获取SD卡的容量
 extern u8 STM32_SD_ReadSingleBlock(u32 sector);//读SD卡的一个block
 extern unsigned char STM32_SD_Init(void);
-extern unsigned int LCD_PrintfStringGT(u16 x,u16 y,u8 font,const char *format,...);		//后边的省略号就是可变参数--高通字库
+unsigned int LCD_PrintfString(u16 x,u16 y,u8 font,const char *format,...);			//后边的省略号就是可变参数
 #endif
