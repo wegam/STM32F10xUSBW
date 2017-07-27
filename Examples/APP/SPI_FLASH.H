@@ -23,15 +23,17 @@
 
 #include "STM32F10x_BitBand.H"
 
-#include "STM32_SYSTICK.H"
+//#include "STM32_SYSTICK.H"
+#include "STM32_SPI.H"
 
 
 void SPI_FLASH_Configuration(void);
 void SPI_FLASH_Server(void);
-void SPI_FLASH_GPIO_Configuration(void);
-void SPI_FLASH_SpiPort_Configuration(void);
-u8 SPI_FLASH_SendByte(u8 byte);
-u32 SPI_FLASH_ReadID(void);
+
+void SPI_FLASH_Conf(SPI_Conf_TypeDef *SPI_Conf);			//SPI…Ë÷√
+
+u32 SPI_FLASH_ReadID(SPI_Conf_TypeDef *SPI_Conf);
+
 
 
 

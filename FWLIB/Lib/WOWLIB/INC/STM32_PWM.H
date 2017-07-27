@@ -34,12 +34,5 @@ typedef enum
 	PWM_OUTChannel4,
 } PWM_OUTChannelTypeDef;
 
-
-
-//void PWM_Configuration(TIM_TypeDef* TIMx,u16 Prescaler,u16 Period,u8 PWM_RATIO);
-//void PWM_Configuration0(TIM_TypeDef* TIMx,u16 Prescaler,u16 Period,u8 PWM_RATIO);
-void PWM_ClockCmd(TIM_TypeDef* TIMx,u16 Prescaler,u16 Period,u8 PWM_RATIO);		//开启相关GPIO时钟	
-void PWM_GPIO_Configuration(void);			//PWM使用的GPIO配置
-void PWM_SET(TIM_TypeDef* TIMx,u8 PWM_RATIO);	//PWM设定
 void PWM_OUT(TIM_TypeDef* TIMx,PWM_OUTChannelTypeDef PWM_OUTChanneln,double PWM_Frequency ,u16 PWM_Ratio);	//PWM设定-20161127版本
 #endif

@@ -67,14 +67,14 @@ void STM32_LCD_Configuration(void)
 //	SSD1963_PinConf(&SSD1963_Pinfo);
 //	GT32L32_Configuration();
 
-	LCD_PrintfString(10,10,32,"时钟A");					//后边的省略号就是可变参数
+	LCD_PrintfString(10,10,32,"A时钟A");					//后边的省略号就是可变参数
 	LCD_PrintfString(300,230,32,"%02d:",hour);		//后边的省略号就是可变参数
 	LCD_PrintfString(348,230,32,"%02d:",min);			//后边的省略号就是可变参数
 	LCD_PrintfString(396,230,32,"%02d",second);		//后边的省略号就是可变参数
 
 //		SSD1963_DrawCircle(400,240,100);
 //	SSD1963_DrawRectangle(100,100,400,200);
-	SSD1963_DrawLine(300,10,300,470);
+	SSD1963_DrawLine(700,10,700,470);
 
 	SysTick_Configuration(1000);											//系统嘀嗒时钟配置72MHz,单位为uS
 	
@@ -82,7 +82,7 @@ void STM32_LCD_Configuration(void)
 	
 	PWM_OUT(TIM2,PWM_OUTChannel1,5000,10);						//PWM设定-20161127版本
 	
-//	SSD1963_DrawRectangle(100,100,200,200);
+	SSD1963_DrawRectangle(100,100,750,200);
 //	SSD1963_DrawLine(10,100,790,100);
 //	SSD1963_DrawLine(400,100,400,200);
 	

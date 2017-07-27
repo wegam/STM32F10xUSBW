@@ -13545,7 +13545,7 @@
               <MiscControls></MiscControls>
               <Define>SPI_FLASH</Define>
               <Undefine></Undefine>
-              <IncludePath>..\include;..\..\..\APP;..\..\..\..\FWLIB\Lib\CMSIS;..\..\..\..\FWLIB\Lib\FWLib\INC;..\..\..\..\FWLIB\Lib\Startup;..\..\..\..\FWLIB\Lib\USB\INC;..\..\..\..\FWLIB\Lib\WOWLIB\INC;..\..\..\..\FWLIB\main</IncludePath>
+              <IncludePath>..\include;..\..\..\APP;..\..\..\..\FWLIB\Lib\CMSIS;..\..\..\..\FWLIB\Lib\FWLib\INC;..\..\..\..\FWLIB\Lib\Startup;..\..\..\..\FWLIB\Lib\USB\INC;..\..\..\..\FWLIB\Lib\WOWLIB\INC;..\..\..\..\FWLIB\main;..\..\..\..\FWLIB\Lib\PHY\INC</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

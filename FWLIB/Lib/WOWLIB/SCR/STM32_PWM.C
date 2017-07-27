@@ -17,68 +17,12 @@
 
 #include "STM32_PWM.H"
 
-//#include "STM32_TIM.H"
-
-
-//*******************************PWM相关结构体**********************************/
-
-///1************* 定时器结构体 */
-///* TIM Time Base Init structure definition */
-//typedef struct
-//{
-//  u16 TIM_Prescaler;								//-------分频系数========取值0x0000~0xFFFF，用来分频TIM clock
-//  u16 TIM_CounterMode;							//-------计数方式========TIM_CounterMode_Up(向上计数模式),TIM_CounterMode_Down(向下计数模式),
-																			//-----------------------TIM_CounterMode_CenterAligned1(中央对齐模式1计数模式),TIM_CounterMode_CenterAligned2(中央对齐模式2计数模式),TIM_CounterMode_CenterAligned3(中央对齐模式3计数模式)
-//  u16 TIM_Period;										//-------计数值==========下一个更新事件装入活动的自动重装载寄存器周期的值,取值0x0000~0xFFFF,计数TIM_Period+1个节拍后产生溢出
-//  u16 TIM_ClockDivision;						//-------设定时间分割值===默认为0,特殊场合时TIM_ClockDivision用来做一段延时,TIM_CKD_DIV1,TIM_CKD_DIV2,TIM_CKD_DIV3
-//  u8 TIM_RepetitionCounter;					//-------重复计数次数=====重复多少次溢出后才触发一次溢出中断，
-//} TIM_TimeBaseInitTypeDef;
-///2************* PWM输出构体 */
-///* TIM Output Compare Init structure definition */
-//typedef struct
-//{
-//  u16 TIM_OCMode;										//-------定时器模式=======TIM_OCMode_Timing(输出比较时间模式),TIM_OCMode_Active(输出比较主动模式),TIM_OCMode_Inactive(输出比较非主动模式),
-																			//-----------------------TIM_OCMode_Toggle(输出比较触发模式),TIM_OCMode_PWM1(脉冲宽度调制模式1),TIM_OCMode_PWM2(脉冲宽度调制模式2)		
-//  u16 TIM_OutputState;							//-------
-//  u16 TIM_OutputNState;							//-------
-//  u16 TIM_Pulse;
-//  u16 TIM_OCPolarity;
-//  u16 TIM_OCNPolarity;
-//  u16 TIM_OCIdleState;
-//  u16 TIM_OCNIdleState;
-//} TIM_OCInitTypeDef;
-///3************* PWM输入构体 */
-///* TIM Input Capture Init structure definition */
-//typedef struct
-//{
-//  u16 TIM_Channel;
-//  u16 TIM_ICPolarity;
-//  u16 TIM_ICSelection;
-//  u16 TIM_ICPrescaler;
-//  u16 TIM_ICFilter;
-//} TIM_ICInitTypeDef;
-///4************* BDTR高级定时器电机控制输出结构体 */
-///* BDTR structure definition */
-//typedef struct
-//{
-//  u16 TIM_OSSRState;
-//  u16 TIM_OSSIState;
-//  u16 TIM_LOCKLevel; 
-//  u16 TIM_DeadTime;
-//  u16 TIM_Break;
-//  u16 TIM_BreakPolarity;
-//  u16 TIM_AutomaticOutput;
-//} TIM_BDTRInitTypeDef;
-
-
 
 /*##############################################################################
 ################################################################################
 # 模块名		:	STM32_PWM	
 # 功能描述	:	PWM配置使用
 -------------------------------------------------------------------------------	
-
-
 ***********************************************************************************************************
 ---------------------------------------------------------------------------------------	
 外设	|	CH1		|	CH2		|	CH3		|	CH4		|								|								|								|
@@ -103,6 +47,9 @@ TIM8	|				|				|				|				|								|								|								|
 
 ################################################################################
 ###############################################################################*/
+void PWM_ClockCmd(TIM_TypeDef* TIMx,u16 Prescaler,u16 Period,u8 PWM_RATIO);		//开启相关GPIO时钟	
+void PWM_GPIO_Configuration(void);			//PWM使用的GPIO配置
+void PWM_SET(TIM_TypeDef* TIMx,u8 PWM_RATIO);	//PWM设定
 /*******************************************************************************
 * 函数名		:	PWM_OUT	
 * 功能描述	:		 

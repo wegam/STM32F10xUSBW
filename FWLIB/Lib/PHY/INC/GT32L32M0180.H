@@ -239,7 +239,7 @@ typedef struct      /*Card Identification Data*/
 
 void 	GT32L32_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init);				//普通SPI通讯方式配置
 void 	GT32L32_DMA_ConfigurationNR(GT32L32_Init_TypeDef *GT32L32_Init);		//SPI-DMA通讯方式配置---20170722未完成
-u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);																					//读取芯片状态
+u8 GT32L32_ReadStatus(GT32L32_Init_TypeDef *GT32L32_Init);								//读取芯片状态
 
 
 void 	GT32L32_PinConf(GT32L32_Init_TypeDef *GT32L32_Init);
