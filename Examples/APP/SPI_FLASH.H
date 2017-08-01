@@ -61,6 +61,10 @@ typedef struct	_SPI_Flash
 	
 	unsigned char SPI_Flash_NSS_CsFlg;									//如果使用纯硬件SPI（含CS脚），	SPI_Flash_NSS_CsFlg=1，		否则SPI_Flash_NSS_CsFlg=0；此由SPI_Flash_ConfigurationNR根据SPI管脚判断设置此值
 	unsigned char SPI_Flash_USER_PotFlg;								//如果使用硬件SPI接口，				SPI_Flash_USER_PotFlg=1，	否则SSPI_Flash_USER_PotFlg=0；此由SPI_Flash_ConfigurationNR根据SPI管脚判断设置此值
+	//------------配置完成后读取FLASH_ID确认FLASH型号后自动补充以下数据
+	unsigned int	SPI_FLASH_PageSize;						//(256-byte per page)
+	unsigned int	SPI_FLASH_SectorSize;					//(4K-byte per sector)
+	unsigned int	SPI_FLASH_BlockSize;					//(64K-byte per block)
 	
 }SPI_FLASH_TypeDef;
 
@@ -111,28 +115,37 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf);			//SPI参数设置
 //---------------------------------------------------------------------------------
 
 void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf);					//普通SPI接口配置--未开中断和DMA
+void SPI_FLASH_GetInfo(SPI_FLASH_TypeDef *SPI_Conf);		//获取FLASH信息---根据ID确定FLASH型号，配置页大小，扇区大小，块大小参数
+
 //------------数据读写函数
 void SPI_FLASH_PageWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASH写一页数据
 void SPI_FLASH_BufferWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);	//FLASH写缓冲数据
 void SPI_FLASH_BufferRead(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead);		//SPI读缓冲区
-//------------控制函数
-void SPI_FLASH_ENALBE		(SPI_FLASH_TypeDef 	*SPI_Conf);						//SPI_FLASH_使能
-void SPI_FLASH_DISALBE	(SPI_FLASH_TypeDef 	*SPI_Conf);						//SPI_FLASH_关闭
-//------------
-u8 	SPI_FLASH_WriteReadByte(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);	//Flash发送一字节并读取一字节数据
-//------------
-void SPI_FLASH_WriteEnable(SPI_FLASH_TypeDef *SPI_Conf);				//0x06写使能
-void SPI_FLASH_WriteDisable(SPI_FLASH_TypeDef *SPI_Conf);				//0x写保护--写禁止
-void SPI_FLASH_WaitForWriteEnd(SPI_FLASH_TypeDef *SPI_Conf);		//等待FLASH写完成
-//------------状态函数
-u8 SPI_FLASH_ReadStatus(SPI_FLASH_TypeDef *SPI_Conf);		//读Flash状态寄存器
-void SPI_FLASH_WriteStatus(SPI_FLASH_TypeDef *SPI_Conf,u8 Status);		//写Flash状态寄存器
-//------------
-u32 SPI_FLASH_ReadID(SPI_FLASH_TypeDef *SPI_Conf);			//读FlashID
+
 //------------擦除函数
 void SPI_FLASH_SectorErase(SPI_FLASH_TypeDef *SPI_Conf,u32 SectorAddr);		//Flash扇区擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
 void SPI_FLASH_BulkErase(SPI_FLASH_TypeDef *SPI_Conf);										//Flash块擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
 void SPI_FLASH_ChipErase(SPI_FLASH_TypeDef *SPI_Conf);										//FLASH整片擦除
+
+
+//************************************以下为内部调用函数
+
+//------------控制函数
+void SPI_FLASH_ENALBE		(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_使能
+void SPI_FLASH_DISALBE	(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_关闭
+//------------
+u8 	SPI_FLASH_WriteReadByte(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);			//Flash发送一字节并读取一字节数据
+//------------
+void SPI_FLASH_WriteEnable(SPI_FLASH_TypeDef *SPI_Conf);							//0x06写使能
+void SPI_FLASH_WriteDisable(SPI_FLASH_TypeDef *SPI_Conf);							//0x写保护--写禁止
+void SPI_FLASH_WaitForWriteEnd(SPI_FLASH_TypeDef *SPI_Conf);					//等待FLASH写完成
+//------------状态函数
+u8 SPI_FLASH_ReadStatus(SPI_FLASH_TypeDef *SPI_Conf);									//读Flash状态寄存器
+void SPI_FLASH_WriteStatus(SPI_FLASH_TypeDef *SPI_Conf,u8 Status);		//写Flash状态寄存器
+//------------
+u32 SPI_FLASH_ReadID(SPI_FLASH_TypeDef *SPI_Conf);										//读FlashID
+
+
 //------------其它--暂未调试
 void SPI_FLASH_StartReadSequence(SPI_FLASH_TypeDef *SPI_Conf,u32 ReadAddr);	//开始读数据
 u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord);	//发送16位数据
