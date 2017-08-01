@@ -32,6 +32,7 @@ Page：
 #include "STM32_PWM.H"
 #include "STM32_SYS.H"
 #include "STM32_SPI.H"
+#include "STM32_GPIO.H"
 #include "STM32_SYSTICK.H"
 
 #define 	Dummy_Byte 0xA5					//FLASH空操作数
@@ -63,11 +64,11 @@ u8 testRbuffer[FlASH_BufferSize]={0};
 void SPI_FLASH_Configuration(void)
 {
 	SYS_Configuration();											//系统配置 STM32_SYS.H	
+	GPIO_DeInitAll();																							//将所有的GPIO关闭----V20170605
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,500);			//PWM设定-20161127版本
 	
 	SPI_FLASH_Conf(&FLASH_Conf);			//SPI设置
-//	SPI_FLASH_GPIO_Configuration();						//相应管脚配置
-//	SPI_FLASH_SpiPort_Configuration();				//SPI接口配置
+
 	FlashStatus=WEL_Flag;	
 	SysTick_Configuration(1000);							//系统嘀嗒时钟配置72MHz,单位为uS
 }
@@ -118,7 +119,7 @@ void SPI_FLASH_Server(void)
 		}
 	}
 	RWF++;
-	if(RWF==3000)
+	if(RWF==2000)
 	{
 		/* Erase SPI FLASH Sector to write on */
 //		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_SectorToErase);
@@ -137,8 +138,10 @@ void SPI_FLASH_Server(void)
 //			SPI_FLASH_WriteEnable(&FLASH_Conf);		//0x06写使能
 //			SPI_FLASH_PageWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);		//FLASH写一页数据
 //		SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);	//FLASH写缓冲数据
+		
+		
 	}
-	else if(RWF==5000)
+	else if(RWF==3000)
 	{
 		RWF=0; 
 //		memset(testRbuffer, 0x00, 10);
@@ -149,6 +152,8 @@ void SPI_FLASH_Server(void)
 //		testRbuffer[11]=(u8)(FlashID>>8);
 //		testRbuffer[12]=(u8)(FlashID>>0);
 		SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, FLASH_ReadAddress, FlASH_BufferSize);
+
+		
 	}
 //	Temp=0;
 //	Temp=SPI_FLASH_ReadID();
@@ -258,6 +263,8 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	#endif
 	
 	SPI_FLASH_ConfigurationNR(SPI_Conf);				//普通SPI接口配置
+	
+	SPI_FLASH_WriteStatus(SPI_Conf,0X00);		//写Flash状态寄存器
 }
 
 
