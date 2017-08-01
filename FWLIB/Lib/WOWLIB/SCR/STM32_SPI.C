@@ -313,7 +313,9 @@ void STM32_SPI_ConfigurationNR(SPI_Conf_TypeDef *SPI_Conf)
 	SPI_InitStructure.SPI_CRCPolynomial = 7;																	//设置crc多项式	（数字）如7
 	SPI_Init(SPI_Conf->SPIx,&SPI_InitStructure);
 
-	SPI_Cmd(SPI_Conf->SPIx, DISABLE);				//使能SPI	
+	SPI_Cmd(SPI_Conf->SPIx, DISABLE);				//使能SPI
+//	STM32_SPI_CS_LOW(SPI_Conf);				//CS_HIGH片选禁止	
+	STM32_SPI_CS_HIGH(SPI_Conf);				//CS_HIGH片选禁止
 	
 	//3)**********使能SPIx_NESS为主输出模式
 	if((SPI_Conf->SPIx->CR1&0X0200)!=SPI_NSS_Soft)						//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
@@ -324,6 +326,26 @@ void STM32_SPI_ConfigurationNR(SPI_Conf_TypeDef *SPI_Conf)
 	{
 		SPI_SSOutputCmd(SPI_Conf->SPIx, DISABLE);								//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 	}
+}
+/*******************************************************************************
+*函数名			:	STM32_SPI_CS_LOW
+*功能描述		:	片选使能
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void STM32_SPI_CS_LOW(SPI_Conf_TypeDef *SPI_Conf)
+{
+	GPIO_ResetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);		//CS_LOW片选使能
+}
+/*******************************************************************************
+*函数名			:	STM32_SPI_CS_HIGH
+*功能描述		:	片选禁止
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void STM32_SPI_CS_HIGH(SPI_Conf_TypeDef *SPI_Conf)
+{
+	GPIO_SetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);		//CS_HIGH禁止片选
 }
 
 /*******************************************************************************
@@ -372,7 +394,11 @@ u8	STM32_SPI_ReadWriteByte(SPI_Conf_TypeDef *SPI_Conf,u8 byte)
 *输入				: 
 *返回值			:	无
 *******************************************************************************/
-void STM32_SPI_SendBuffer(SPI_Conf_TypeDef *SPI_Conf,u32 BufferSize,u8 *RevBuffer)					//发送一字节数据
+void STM32_SPI_SendBuffer(
+													SPI_Conf_TypeDef *SPI_Conf,
+													u32 BufferSize,
+													u8 *RevBuffer
+)					//发送数据
 {
 	u32 bufferNum=0;
 	u8 SPI_PTflg=0;		//判断是否为全硬件SPI，SPI_PTflg=1全硬件SPI，SPI_PTflg=0
@@ -398,14 +424,14 @@ void STM32_SPI_SendBuffer(SPI_Conf_TypeDef *SPI_Conf,u32 BufferSize,u8 *RevBuffe
 	}
 	else
 	{
-		GPIO_ResetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);
+		GPIO_ResetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);		//CS_LOW片选使能
 		SPI_Cmd(SPI_Conf->SPIx, ENABLE);
 		for(bufferNum=0;bufferNum<BufferSize;bufferNum++)
 		{
 			RevBuffer[bufferNum]=STM32_SPI_ReadWriteByte(SPI_Conf,0xFF);
 		}
 		SPI_Cmd(SPI_Conf->SPIx, DISABLE);
-		GPIO_SetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);
+		GPIO_SetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);		//CS_HIGH禁止片选
 	}
 }
 
@@ -450,6 +476,7 @@ u8	STM32_SPI_ReadWriteBuffer(SPI_Conf_TypeDef *SPI_Conf,u32 BufferSize,u8 *SendB
 		SPI_Cmd(SPI_Conf->SPIx, DISABLE);
 		GPIO_SetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);
 	}
+	return 0;
 }
 
 

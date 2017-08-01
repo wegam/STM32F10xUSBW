@@ -66,8 +66,15 @@ void STM32_SPI_ConfigurationNR(SPI_Conf_TypeDef *SPI_Conf);					//ÆÕÍ¨SPI½Ó¿ÚÅäÖ
 
 
 
+
+void STM32_SPI_CS_LOW(SPI_Conf_TypeDef *SPI_Conf);				//CS_LOWÆ¬Ñ¡Ê¹ÄÜ
+void STM32_SPI_CS_HIGH(SPI_Conf_TypeDef *SPI_Conf);				//CS_HIGHÆ¬Ñ¡½ûÖ¹
+
+
 void STM32_SPI_SendByte(SPI_Conf_TypeDef *SPI_Conf,u8 byte);					//·¢ËÍÒ»×Ö½ÚÊý¾Ý
+
 u8	STM32_SPI_ReadWriteByte(SPI_Conf_TypeDef *SPI_Conf,u8 byte);			//·¢ËÍÒ»×Ö½ÚÊý¾Ý£¬·µ»Ø½ÓÊÕµ½µÄÊý¾Ý
+
 
 void STM32_SPI_SendBuffer(SPI_Conf_TypeDef *SPI_Conf,u32 BufferSize,u8 *SendBuffer);					//·¢ËÍÒ»×Ö½ÚÊý¾Ý
 u8	STM32_SPI_ReadWriteBuffer(SPI_Conf_TypeDef *SPI_Conf,u32 BufferSize,u8 *SendBuffer,u8 *RevBuffer);		//Á¬½Ó¶ÁÊý¾Ý
