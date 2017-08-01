@@ -63,6 +63,22 @@ typedef struct	_SPI_Flash
 	unsigned char SPI_Flash_USER_PotFlg;								//如果使用硬件SPI接口，				SPI_Flash_USER_PotFlg=1，	否则SSPI_Flash_USER_PotFlg=0；此由SPI_Flash_ConfigurationNR根据SPI管脚判断设置此值
 	
 }SPI_FLASH_TypeDef;
+
+typedef	enum _SPI_FLASH_CLASS		//FLASH_MX25L4006E
+{
+	ChipSize		=	0x01,
+	SectorSize	=	4*1024,		//扇区大小4K Byte
+	BlockSize		=	64*1024,	//块大小64K
+	PageSize		=	256,		//页大小256 Byte
+	
+	MX25L4006E_PageSize		=	256,		//(256-byte per page)
+	MX25L4006E_SectorSize,					//(4K-byte per sector)
+	MX25L4006E_BlockSize,						//(64K-byte per block)
+	
+	
+	sat
+}SPI_FLASH_CLASS;		
+
 /******************************Flash命令定义参考MX25L4006E*******************************/
 #define	Flash_WREN		(unsigned char)0x06				//写使能
 #define	Flash_WRDI		(unsigned char)0x04				//写失能
