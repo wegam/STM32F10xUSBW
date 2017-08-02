@@ -21,6 +21,9 @@ Page：
 
 #define USB_TEST_BD				//USB_TEST板
 //#define CMSIS_CDC_BD			//CMSIS-CDC板
+//#include "stdlib.h"
+//#include "stdio.h"
+
 
 #include "stm32f10x_spi.h"
 #include "stm32f10x_gpio.h"
@@ -34,6 +37,7 @@ Page：
 #include "STM32_SPI.H"
 #include "STM32_GPIO.H"
 #include "STM32_SYSTICK.H"
+#include "STM32_USART.H"
 
 #define 	Dummy_Byte 0xA5					//FLASH空操作数
 //#define		SPI_FLASH_PageSize   		0x100		//Flash页大小
@@ -41,6 +45,7 @@ Page：
 #define		FLASH_ReadAddress      	FLASH_WriteAddress
 #define		FLASH_SectorToErase    	FLASH_WriteAddress
 #define 	FlASH_BufferSize				512
+#define 	USART_BufferSize				FlASH_BufferSize
 
 u32 Temp = 0;
 SPI_FLASH_TypeDef	FLASH_Conf;
@@ -48,12 +53,20 @@ SPI_FLASH_TypeDef	FLASH_Conf;
 u16	FLASH_ChipEraseFlag=0;			//启动后擦除一次FLASH
 u16	RWF=0;			//读写标志位
 
+u32 FlashAddr=0;
 u32 FlashID=0;
 u8 FlashStatus=WEL_Flag;
 u8 RevBuffer[FlASH_BufferSize]={0};
 u8 SendBuffer[FlASH_BufferSize]={0x9F,0xFF,0XFF,0XFF};
 u8 testSbuffer[FlASH_BufferSize]={0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfA};
 u8 testRbuffer[FlASH_BufferSize]={0};
+
+u8 RxdBuffe[USART_BufferSize]={0};
+u8 RevBuffe[USART_BufferSize]={0};
+
+u8 TxdBuffe[USART_BufferSize]={0};
+u8 TevBuffe[USART_BufferSize]={0};
+
 /*******************************************************************************
 * 函数名		:	
 * 功能描述	:	 
@@ -67,10 +80,12 @@ void SPI_FLASH_Configuration(void)
 	GPIO_DeInitAll();																							//将所有的GPIO关闭----V20170605
 	PWM_OUT(TIM2,PWM_OUTChannel1,1,500);			//PWM设定-20161127版本
 	
+	USART_DMA_ConfigurationNR	(USART1,115200,(u32*)RxdBuffe,USART_BufferSize);	//USART_DMA配置--查询方式，不开中断
+	
 	SPI_FLASH_Conf(&FLASH_Conf);			//SPI设置
 
 	FlashStatus=WEL_Flag;	
-	SysTick_Configuration(1000);							//系统嘀嗒时钟配置72MHz,单位为uS
+	SysTick_Configuration(100);							//系统嘀嗒时钟配置72MHz,单位为uS
 }
 
 /*******************************************************************************
@@ -82,7 +97,19 @@ void SPI_FLASH_Configuration(void)
 *******************************************************************************/
 void SPI_FLASH_Server(void)
 {
-
+	u16 RxNum=0;
+	u32 Addr=0;
+	
+	RxNum=USART_ReadBufferIDLE			(USART1,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+	
+	if(RxNum&&(FlashAddr<128*4*1024))
+	{		
+		SPI_FLASH_BufferWrite(&FLASH_Conf,RevBuffe, FlashAddr, RxNum);	//FLASH写缓冲数据
+		SPI_FLASH_BufferRead(&FLASH_Conf,testSbuffer,  FlashAddr, RxNum);
+		FlashAddr+=RxNum;
+	}
+//	itoa(1234567890,TxdBuffe,10);//搜索10代表十进制
+	
 	if(Temp!=0)
 	{
 		Temp=0;
@@ -93,15 +120,31 @@ void SPI_FLASH_Server(void)
 		Temp=1;
 
 	}
-
-	if(FLASH_ChipEraseFlag<=1000)
+	
+	if(FLASH_ChipEraseFlag<=3000)
 	{
 		FLASH_ChipEraseFlag++;
-		if(FLASH_ChipEraseFlag==1000)
+		if(FLASH_ChipEraseFlag==3000)
 		{
+//			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
+//			{
+//				SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
+//				Addr+=FlASH_BufferSize;
+//			}
+			
+//			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
+//			{
+//				SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, Addr, FlASH_BufferSize);
+//				Addr+=FlASH_BufferSize;
+//			}
+			
+		
 //		SPI_FLASH_BulkErase(&FLASH_Conf);										//FLASH整片擦除
 //		SPI_FLASH_ChipErase(&FLASH_Conf);										//FLASH整片擦除
-//			SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_ReadAddress);	//Flash扇区擦除
+//		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_ReadAddress);	//Flash扇区擦除
+			
+//			SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);	//FLASH写缓冲数据
+			SPI_FLASH_BufferRead(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);
 		}
 	}
 	RWF++;
@@ -119,7 +162,13 @@ void SPI_FLASH_Server(void)
 	else if(RWF==3000)
 	{
 		RWF=0; 
-		SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, FLASH_ReadAddress, FlASH_BufferSize);
+//		SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, FLASH_ReadAddress, FlASH_BufferSize);
+		
+//		for(Addr=0;Addr<128*4*1024;)
+//		{
+//			SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
+//			Addr+=512;
+//		}
 
 		
 	}
@@ -219,7 +268,7 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_Conf->SPIx=SPI2;
 	SPI_Conf->SPI_CS_PORT=GPIOC;
 	SPI_Conf->SPI_CS_PIN=GPIO_Pin_8;	
-	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_64;
+	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_128;
 	
 	#else
 	
@@ -234,243 +283,6 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_FLASH_GetInfo(SPI_Conf);		//获取FLASH信息---根据ID确定FLASH型号，配置页大小，扇区大小，块大小参数
 
 }
-
-
-/*******************************************************************************
-* Function Name  : SPI_FLASH_PageWrite
-* Description    : Writes more than one byte to the FLASH with a single WRITE
-*                  cycle(Page WRITE sequence). The number of byte can't exceed
-*                  the FLASH page size.
-* Input          : - pBuffer : pointer to the buffer  containing the data to be
-*                    written to the FLASH.
-*                  - WriteAddr : FLASH's internal address to write to.
-*                  - NumByteToWrite : number of bytes to write to the FLASH,
-*                    must be equal or less than "SPI_FLASH_PageSize" value.
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void SPI_FLASH_PageWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)	//FLASH写一页数据
-{
-	SPI_FLASH_WaitForWriteEnd(SPI_Conf);									//等待FLASH写完成
-	SPI_FLASH_WriteEnable(SPI_Conf);											//0x06写使能
-	
-  SPI_FLASH_ENALBE(SPI_Conf);														//SPI_FLASH_使能
-	
-  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WPAGE);											//页写命令
-  SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF0000) >> 16);		//写入高8位地址
-	SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF00) >> 8);				//写入中间8位地址
-  SPI_FLASH_WriteReadByte(SPI_Conf,WriteAddr & 0xFF);								//写入低8位地址
-	
-  while (NumByteToWrite--)		//开始写入数据，直到写完
-  {
-    SPI_FLASH_WriteReadByte(SPI_Conf,*pBuffer);				//写入数据
-    pBuffer++;
-  }
-	SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
-	
-  SPI_FLASH_WaitForWriteEnd(SPI_Conf);						//等待写入完成
-	
-}
-/*******************************************************************************
-* Function Name  : SPI_FLASH_BufferWrite
-* Description    : Writes block of data to the FLASH. In this function, the
-*                  number of WRITE cycles are reduced, using Page WRITE sequence.
-* Input          : - pBuffer : pointer to the buffer  containing the data to be
-*                    written to the FLASH.
-*                  - WriteAddr : FLASH's internal address to write to.
-*                  - NumByteToWrite : number of bytes to write to the FLASH.
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void SPI_FLASH_BufferWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
-{
-  u8 NumOfPage = 0, NumOfSingle = 0, Addr = 0, count = 0, temp = 0;
-	u32	SPI_FLASH_PageSize=SPI_Conf->SPI_FLASH_PageSize;		//获取此芯片的页大小
-	
-  Addr = WriteAddr % SPI_FLASH_PageSize;							//计算页地址是否对齐，可以整除则对齐
-  count = SPI_FLASH_PageSize - Addr;									//计算页内剩余空间大小（例：页大小256，地址256，则WriteAddr % SPI_FLASH_PageSize==1；在页内剩余255个存储空间）
-  NumOfPage =  NumByteToWrite / SPI_FLASH_PageSize;		//计算需要用到的页数量
-  NumOfSingle = NumByteToWrite % SPI_FLASH_PageSize;	//计算剩余不完整页需要写入的数量
-
-  if (Addr == 0) 					/* WriteAddr is SPI_FLASH_PageSize aligned  */	//页地址对齐
-  {
-    if (NumOfPage == 0) 	/* NumByteToWrite < SPI_FLASH_PageSize */				//数据不到一页
-    {
-      SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumByteToWrite);
-    }
-    else /* NumByteToWrite > SPI_FLASH_PageSize */												//写入的数据大于一页
-    {
-      while (NumOfPage--)
-      {
-        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, SPI_FLASH_PageSize);
-        WriteAddr +=  SPI_FLASH_PageSize;		//地址加一页
-        pBuffer += SPI_FLASH_PageSize;			//缓冲区数据地址偏移一页
-      }
-
-      SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumOfSingle);		//写入剩余非整页倍数据
-    }
-  }
-  else 				/* WriteAddr is not SPI_FLASH_PageSize aligned  */				//页地址未对齐
-  {
-    if (NumOfPage == 0) /* NumByteToWrite < SPI_FLASH_PageSize */				//数据不到一页大小
-    {
-      if (NumOfSingle > count) /* (NumByteToWrite + WriteAddr) > SPI_FLASH_PageSize */			//需要跨页（需要写入的数据大于页内剩余空间）
-      {
-        temp = NumOfSingle - count;		//计算下一页待写入的数据个数（总数-当前页空间==下一页待写入的数据个数）
-
-        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, count);	//将当前页空间写满
-        WriteAddr +=  count;					//地址+
-        pBuffer += count;
-
-        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, temp);		//将剩余的数据写入下一页
-      }
-      else		//不需要跨页
-      {
-        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumByteToWrite);		//不需要跨页（剩余的空间足够存储当前数据）则直接写入
-      }
-    }
-    else /* NumByteToWrite > SPI_FLASH_PageSize */											//写入的数据大于一页并且地址不对齐
-    {
-      NumByteToWrite -= count;														//计算将数据写入地址不对齐页后剩余数据个数
-      NumOfPage =  NumByteToWrite / SPI_FLASH_PageSize;		//计算剩余数据需要占用的完整页个数
-      NumOfSingle = NumByteToWrite % SPI_FLASH_PageSize;	//计算剩余数据中不完整页的数据个数
-			
-			//------先将前面一部分数据将起始地址不对齐数据写满
-      SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, count);
-      WriteAddr +=  count;
-      pBuffer += count;
-
-      while (NumOfPage--)			//将剩余的整页数据写入FLASH
-      {
-        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, SPI_FLASH_PageSize);
-        WriteAddr +=  SPI_FLASH_PageSize;
-        pBuffer += SPI_FLASH_PageSize;
-      }
-
-      if (NumOfSingle != 0)		//判断是否还有剩余（不够一页）待写入
-      {
-        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumOfSingle);
-      }
-    }
-  }
-}
-
-/*******************************************************************************
-* Function Name  : SPI_FLASH_BufferRead
-* Description    : Reads a block of data from the FLASH.
-* Input          : - pBuffer : pointer to the buffer that receives the data read
-*                    from the FLASH.
-*                  - ReadAddr : FLASH's internal address to read from.
-*                  - NumByteToRead : number of bytes to read from the FLASH.
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void SPI_FLASH_BufferRead(
-													SPI_FLASH_TypeDef *SPI_Conf,
-													u8* pBuffer, 					//数据的数据存储缓冲区
-													u32 ReadAddr, 				//读取的起始地址
-													u16 NumByteToRead			//待读取字节数
-)
-{
-//	while(SPI_FLASH_ReadStatus(&FLASH_Conf)&WIP_Flag==WIP_Flag);		//读Flash状态寄存器
-	SPI_FLASH_WaitForWriteEnd(SPI_Conf);	//等待FLASH写完成
-	
-	SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
-	
-  /* Send "Read from Memory " instruction */
-  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);
-
-  /* Send ReadAddr high nibble address byte to read from */
-  SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);
-  /* Send ReadAddr medium nibble address byte to read from */
-  SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);
-  /* Send ReadAddr low nibble address byte to read from */
-  SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);
-
-  while (NumByteToRead--) /* while there is data to be read */
-  {
-    /* Read a byte from the FLASH */
-    *pBuffer = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);
-    /* Point to the next location where the byte read will be saved */
-    pBuffer++;
-  }
-	SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
-}
-
-
-/*******************************************************************************
-* Function Name  : SPI_FLASH_StartReadSequence
-* Description    : Initiates a read data byte (READ) sequence from the Flash.
-*                  This is done by driving the /CS line low to select the device,
-*                  then the READ instruction is transmitted followed by 3 bytes
-*                  address. This function exit and keep the /CS line low, so the
-*                  Flash still being selected. With this technique the whole
-*                  content of the Flash is read with a single READ instruction.
-* Input          : - ReadAddr : FLASH's internal address to read from.
-* Output         : None
-* Return         : None
-*******************************************************************************/
-void SPI_FLASH_StartReadSequence(SPI_FLASH_TypeDef *SPI_Conf,u32 ReadAddr)
-{
-//  /* Select the FLASH: Chip Select low */
-//  SPI_FLASH_CS_LOW(SPI_Conf);
-
-  /* Send "Read from Memory " instruction */
-  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);
-
-  /* Send the 24-bit address of the address to read from -----------------------*/
-  /* Send ReadAddr high nibble address byte */
-  SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);
-  /* Send ReadAddr medium nibble address byte */
-  SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);
-  /* Send ReadAddr low nibble address byte */
-  SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);
-}
-
-
-
-
-/*******************************************************************************
-* Function Name  : SPI_FLASH_SendHalfWord
-* Description    : Sends a Half Word through the SPI interface and return the
-*                  Half Word received from the SPI bus.
-* Input          : Half Word : Half Word to send.
-* Output         : None
-* Return         : The value of the received Half Word.
-*******************************************************************************/
-u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord)
-{
-  /* Loop while DR register in not emplty */
-  while (SPI_I2S_GetFlagStatus(SPI_Conf->SPIx, SPI_I2S_FLAG_TXE) == RESET);
-
-  /* Send Half Word through the SPI1 peripheral */
-  SPI_I2S_SendData(SPI_Conf->SPIx, HalfWord);
-
-  /* Wait to receive a Half Word */
-  while (SPI_I2S_GetFlagStatus(SPI_Conf->SPIx, SPI_I2S_FLAG_RXNE) == RESET);
-
-  /* Return the Half Word read from the SPI bus */
-  return SPI_I2S_ReceiveData(SPI_Conf->SPIx);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
@@ -750,6 +562,224 @@ void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf)
 		SPI_SSOutputCmd(SPI_Conf->SPIx, DISABLE);								//如果在主机模式下的片选方式为硬件（SPI_NSS_Hard）方式，此处必须打开，否则NSS无信号
 	}
 }
+
+/*******************************************************************************
+* Function Name  : SPI_FLASH_PageWrite
+* Description    : Writes more than one byte to the FLASH with a single WRITE
+*                  cycle(Page WRITE sequence). The number of byte can't exceed
+*                  the FLASH page size.
+* Input          : - pBuffer : pointer to the buffer  containing the data to be
+*                    written to the FLASH.
+*                  - WriteAddr : FLASH's internal address to write to.
+*                  - NumByteToWrite : number of bytes to write to the FLASH,
+*                    must be equal or less than "SPI_FLASH_PageSize" value.
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void SPI_FLASH_PageWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)	//FLASH写一页数据
+{
+	if(NumByteToWrite)
+	{
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);									//等待FLASH写完成
+		SPI_FLASH_WriteEnable(SPI_Conf);											//0x06写使能
+		
+		SPI_FLASH_ENALBE(SPI_Conf);														//SPI_FLASH_使能
+		
+		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WPAGE);											//页写命令
+		SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF0000) >> 16);		//写入高8位地址
+		SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF00) >> 8);				//写入中间8位地址
+		SPI_FLASH_WriteReadByte(SPI_Conf,WriteAddr & 0xFF);								//写入低8位地址
+		
+		while (NumByteToWrite--)		//开始写入数据，直到写完
+		{
+			SPI_FLASH_WriteReadByte(SPI_Conf,*pBuffer);				//写入数据
+			pBuffer++;
+		}
+		SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
+		
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);						//等待写入完成
+	}	
+}
+/*******************************************************************************
+* Function Name  : SPI_FLASH_BufferWrite
+* Description    : Writes block of data to the FLASH. In this function, the
+*                  number of WRITE cycles are reduced, using Page WRITE sequence.
+* Input          : - pBuffer : pointer to the buffer  containing the data to be
+*                    written to the FLASH.
+*                  - WriteAddr : FLASH's internal address to write to.
+*                  - NumByteToWrite : number of bytes to write to the FLASH.
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void SPI_FLASH_BufferWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)
+{
+  u8 NumOfPage = 0, NumOfSingle = 0, Addr = 0, count = 0, temp = 0;
+	u32	SPI_FLASH_PageSize=SPI_Conf->SPI_FLASH_PageSize;		//获取此芯片的页大小
+	
+  Addr = WriteAddr % SPI_FLASH_PageSize;							//计算页地址是否对齐，可以整除则对齐
+  count = SPI_FLASH_PageSize - Addr;									//计算页内剩余空间大小（例：页大小256，地址256，则WriteAddr % SPI_FLASH_PageSize==1；在页内剩余255个存储空间）
+  NumOfPage =  NumByteToWrite / SPI_FLASH_PageSize;		//计算需要用到的页数量
+  NumOfSingle = NumByteToWrite % SPI_FLASH_PageSize;	//计算剩余不完整页需要写入的数量
+
+  if (Addr == 0) 					/* WriteAddr is SPI_FLASH_PageSize aligned  */	//页地址对齐
+  {
+    if (NumOfPage == 0) 	/* NumByteToWrite < SPI_FLASH_PageSize */				//数据不到一页
+    {
+      SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumByteToWrite);
+    }
+    else /* NumByteToWrite > SPI_FLASH_PageSize */												//写入的数据大于一页
+    {
+      while (NumOfPage--)
+      {
+        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, SPI_FLASH_PageSize);
+        WriteAddr +=  SPI_FLASH_PageSize;		//地址加一页
+        pBuffer += SPI_FLASH_PageSize;			//缓冲区数据地址偏移一页
+      }
+
+      SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumOfSingle);		//写入剩余非整页倍数据
+    }
+  }
+  else 				/* WriteAddr is not SPI_FLASH_PageSize aligned  */				//页地址未对齐
+  {
+    if (NumOfPage == 0) /* NumByteToWrite < SPI_FLASH_PageSize */				//数据不到一页大小
+    {
+      if (NumOfSingle > count) /* (NumByteToWrite + WriteAddr) > SPI_FLASH_PageSize */			//需要跨页（需要写入的数据大于页内剩余空间）
+      {
+        temp = NumOfSingle - count;		//计算下一页待写入的数据个数（总数-当前页空间==下一页待写入的数据个数）
+
+        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, count);	//将当前页空间写满
+        WriteAddr +=  count;					//地址+
+        pBuffer += count;
+
+        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, temp);		//将剩余的数据写入下一页
+      }
+      else		//不需要跨页
+      {
+        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumByteToWrite);		//不需要跨页（剩余的空间足够存储当前数据）则直接写入
+      }
+    }
+    else /* NumByteToWrite > SPI_FLASH_PageSize */											//写入的数据大于一页并且地址不对齐
+    {
+      NumByteToWrite -= count;														//计算将数据写入地址不对齐页后剩余数据个数
+      NumOfPage =  NumByteToWrite / SPI_FLASH_PageSize;		//计算剩余数据需要占用的完整页个数
+      NumOfSingle = NumByteToWrite % SPI_FLASH_PageSize;	//计算剩余数据中不完整页的数据个数
+			
+			//------先将前面一部分数据将起始地址不对齐数据写满
+      SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, count);
+      WriteAddr +=  count;
+      pBuffer += count;
+
+      while (NumOfPage--)			//将剩余的整页数据写入FLASH
+      {
+        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, SPI_FLASH_PageSize);
+        WriteAddr +=  SPI_FLASH_PageSize;
+        pBuffer += SPI_FLASH_PageSize;
+      }
+
+      if (NumOfSingle != 0)		//判断是否还有剩余（不够一页）待写入
+      {
+        SPI_FLASH_PageWrite(SPI_Conf,pBuffer, WriteAddr, NumOfSingle);
+      }
+    }
+  }
+}
+
+/*******************************************************************************
+* Function Name  : SPI_FLASH_BufferRead
+* Description    : Reads a block of data from the FLASH.
+* Input          : - pBuffer : pointer to the buffer that receives the data read
+*                    from the FLASH.
+*                  - ReadAddr : FLASH's internal address to read from.
+*                  - NumByteToRead : number of bytes to read from the FLASH.
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void SPI_FLASH_BufferRead(
+													SPI_FLASH_TypeDef *SPI_Conf,
+													u8* pBuffer, 					//数据的数据存储缓冲区
+													u32 ReadAddr, 				//读取的起始地址
+													u16 NumByteToRead			//待读取字节数
+)
+{
+	if(NumByteToRead)
+	{
+	//	while(SPI_FLASH_ReadStatus(&FLASH_Conf)&WIP_Flag==WIP_Flag);		//读Flash状态寄存器
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);	//等待FLASH写完成
+		
+		SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
+		
+		/* Send "Read from Memory " instruction */
+		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);
+
+		/* Send ReadAddr high nibble address byte to read from */
+		SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);
+		/* Send ReadAddr medium nibble address byte to read from */
+		SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);
+		/* Send ReadAddr low nibble address byte to read from */
+		SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);
+
+		while (NumByteToRead--) /* while there is data to be read */
+		{
+			/* Read a byte from the FLASH */
+			*pBuffer = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);
+			/* Point to the next location where the byte read will be saved */
+			pBuffer++;
+		}
+		SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
+	}
+}
+
+
+/*******************************************************************************
+* Function Name  : SPI_FLASH_StartReadSequence
+* Description    : Initiates a read data byte (READ) sequence from the Flash.
+*                  This is done by driving the /CS line low to select the device,
+*                  then the READ instruction is transmitted followed by 3 bytes
+*                  address. This function exit and keep the /CS line low, so the
+*                  Flash still being selected. With this technique the whole
+*                  content of the Flash is read with a single READ instruction.
+* Input          : - ReadAddr : FLASH's internal address to read from.
+* Output         : None
+* Return         : None
+*******************************************************************************/
+void SPI_FLASH_StartReadSequence(SPI_FLASH_TypeDef *SPI_Conf,u32 ReadAddr)
+{
+//  /* Select the FLASH: Chip Select low */
+//  SPI_FLASH_CS_LOW(SPI_Conf);
+
+  /* Send "Read from Memory " instruction */
+  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);
+
+  /* Send the 24-bit address of the address to read from -----------------------*/
+  /* Send ReadAddr high nibble address byte */
+  SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);
+  /* Send ReadAddr medium nibble address byte */
+  SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);
+  /* Send ReadAddr low nibble address byte */
+  SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);
+}
+/*******************************************************************************
+* Function Name  : SPI_FLASH_SendHalfWord
+* Description    : Sends a Half Word through the SPI interface and return the
+*                  Half Word received from the SPI bus.
+* Input          : Half Word : Half Word to send.
+* Output         : None
+* Return         : The value of the received Half Word.
+*******************************************************************************/
+u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord)
+{
+  /* Loop while DR register in not emplty */
+  while (SPI_I2S_GetFlagStatus(SPI_Conf->SPIx, SPI_I2S_FLAG_TXE) == RESET);
+
+  /* Send Half Word through the SPI1 peripheral */
+  SPI_I2S_SendData(SPI_Conf->SPIx, HalfWord);
+
+  /* Wait to receive a Half Word */
+  while (SPI_I2S_GetFlagStatus(SPI_Conf->SPIx, SPI_I2S_FLAG_RXNE) == RESET);
+
+  /* Return the Half Word read from the SPI bus */
+  return SPI_I2S_ReceiveData(SPI_Conf->SPIx);
+}
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
@@ -809,13 +839,25 @@ void SPI_FLASH_ENALBE(SPI_FLASH_TypeDef *SPI_Conf)				//SPI_FLASH_使能
 	}
 	else
 	{
+		
+		SPI_Cmd(SPI_Conf->SPIx, ENABLE);	//使能SPI
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
 		GPIO_ResetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);	//CS_LOW片选使能
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		SPI_Cmd(SPI_Conf->SPIx, ENABLE);															//使能SPI
+																	
 	}
 	
 }
@@ -834,6 +876,16 @@ void SPI_FLASH_DISALBE(SPI_FLASH_TypeDef *SPI_Conf)				//SPI_FLASH_关闭
 	else
 	{
 		SPI_Cmd(SPI_Conf->SPIx, DISABLE);															//关闭SPI
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
 		__nop();
 		__nop();
 		__nop();
@@ -879,15 +931,42 @@ void SPI_FLASH_WriteEnable(SPI_FLASH_TypeDef *SPI_Conf)		//0x06
 	SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);	//0x06使能写命令
 	SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭
 	
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	
 	SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
 	SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WRSR);	//0x01写状态寄存器命令
 	SPI_FLASH_WriteReadByte(SPI_Conf,0x00);				//使能写状态寄存器参数--清除写保护
 	SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭
 	
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	
 	SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
 	SPI_Cmd(SPI_Conf->SPIx, ENABLE);					//使能SPI
 	SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);	//0x06使能写命令
 	SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭
+	
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
 	
 	do																				//等待写允许
 	{
@@ -896,10 +975,43 @@ void SPI_FLASH_WriteEnable(SPI_FLASH_TypeDef *SPI_Conf)		//0x06
 		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);						//写入读状态命令 */		
 		Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);	//读状态 */	
 		
-		SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭	
+		SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
 	}while((Status&WEL_Flag)!=WEL_Flag);
 	
-	SPI_FLASH_DISALBE(SPI_Conf);										//SPI_FLASH_关闭	
+//	SPI_FLASH_DISALBE(SPI_Conf);										//SPI_FLASH_关闭
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
 }
 /*******************************************************************************
 * Function Name  : SPI_FLASH_WriteDisable
@@ -921,6 +1033,21 @@ void SPI_FLASH_WriteDisable(SPI_FLASH_TypeDef *SPI_Conf)			//0x写保护--写禁止
 	SPI_FLASH_WriteStatus(SPI_Conf,Status);			//写Flash状态寄存器
 	
 	SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
 	
 }
 /*******************************************************************************
@@ -942,10 +1069,32 @@ void SPI_FLASH_WaitForWriteEnd(SPI_FLASH_TypeDef *SPI_Conf)	//等待FLASH写完成
   do			//循环读取状态值，直到芯片退出忙状态
   {
     FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);		//循环读取状态值，
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
   }
   while ((FLASH_Status & WIP_Flag) == WIP_Flag); 			
 
 	SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
+	__nop();
 }
 /*******************************************************************************
 *函数名			:	function
