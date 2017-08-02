@@ -34,6 +34,28 @@ Chip：	整片FLASH
 Page：
 例：(256-byte per page)(4K-byte per sector/16page per sector)(64K-byte per block/16-sector per block)(8-block per chip)
 ————————————————————————————————————————————*/
+typedef	enum _SPI_FLASH_PROCESS			//FLASH工作过程标志
+{
+	SPI_FLASH_WRITE		=	2,			//FLASH正在写状态
+	SPI_FLASH_READ		=	3,			//FLASH正在读状态
+	SPI_FLASH_ERASE		=	4				//FLASH正在执行擦除工作
+}SPI_FLASH_PROCESS;
+typedef	enum _SPI_FLASH_STATUS			//FLASH状态标志
+{
+	SPI_FLASH_IDLE		=	0,			//FLASH空闲状态，可以读写
+	SPI_FLASH_BUSY		=	1,			//FLASH忙状态，正在执行读写操作
+	SPI_FLASH_WEL			=	2,			//可写标志：读取状态为1表示可以进行写操作，0表示不可以进行写操作
+	SPI_FLASH_WIP			=	3,			//写状态：		读取状态为1表示正在执行写操作，否则表示写入完成
+}SPI_FLASH_STATUS;
+typedef	enum _SPI_FLASH_REQUEST			//请求标志
+{
+	SPI_FLASH_qIDLE		=	0,			//FLASH空闲状态，可以读写
+	SPI_FLASH_qBUSY		=	1,			//FLASH忙状态，正在执行读写操作
+	SPI_FLASH_qWRITE	=	2,			//FLASH正在写状态
+	SPI_FLASH_qREAD		=	3,			//FLASH正在读状态
+	SPI_FLASH_qERASE	=	4				//FLASH正在执行擦除工作
+}SPI_FLASH_REQUEST;
+
 //----SPI管脚配置--------------------------------------------------------------
 typedef struct	_SPI_Flash
 {
@@ -66,7 +88,13 @@ typedef struct	_SPI_Flash
 	unsigned int	SPI_FLASH_SectorSize;					//(4K-byte per sector)
 	unsigned int	SPI_FLASH_BlockSize;					//(64K-byte per block)
 	
+	SPI_FLASH_PROCESS	SPI_FLASH_Process;				//FLASH工作过程标志
+	SPI_FLASH_STATUS 	SPI_FLASH_Status;					//FLASH工作状态标志//根据FLASH当前的状态对FLASH进行操作
+	SPI_FLASH_REQUEST	SPI_FLASH_Request;				//请求标志---根据请求标志检测FLASH状态，
+	
 }SPI_FLASH_TypeDef;
+
+	
 
 typedef	enum _SPI_FLASH_CLASS		//FLASH_MX25L4006E
 {
@@ -114,18 +142,18 @@ void SPI_FLASH_Server(void);
 void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf);			//SPI参数设置
 //---------------------------------------------------------------------------------
 
-void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf);					//普通SPI接口配置--未开中断和DMA
-void SPI_FLASH_GetInfo(SPI_FLASH_TypeDef *SPI_Conf);		//获取FLASH信息---根据ID确定FLASH型号，配置页大小，扇区大小，块大小参数
+void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf);			//普通SPI接口配置--未开中断和DMA
+void SPI_FLASH_GetInfo(SPI_FLASH_TypeDef *SPI_Conf);							//获取FLASH信息---根据ID确定FLASH型号，配置页大小，扇区大小，块大小参数
 
 //------------数据读写函数
-void SPI_FLASH_PageWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASH写一页数据
-void SPI_FLASH_BufferWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);	//FLASH写缓冲数据
-void SPI_FLASH_BufferRead(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead);		//SPI读缓冲区
+void SPI_FLASH_PageWrite		(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASH写一页数据
+void SPI_FLASH_BufferWrite	(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASH写缓冲数据
+void SPI_FLASH_BufferRead		(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead);			//SPI读缓冲区
 
 //------------擦除函数
-void SPI_FLASH_SectorErase(SPI_FLASH_TypeDef *SPI_Conf,u32 SectorAddr);		//Flash扇区擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
-void SPI_FLASH_BulkErase(SPI_FLASH_TypeDef *SPI_Conf);										//Flash块擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
-void SPI_FLASH_ChipErase(SPI_FLASH_TypeDef *SPI_Conf);										//FLASH整片擦除
+void SPI_FLASH_SectorErase	(SPI_FLASH_TypeDef *SPI_Conf,u32 SectorAddr);			//Flash扇区擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
+void SPI_FLASH_BulkErase		(SPI_FLASH_TypeDef *SPI_Conf);										//Flash块擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
+void SPI_FLASH_ChipErase		(SPI_FLASH_TypeDef *SPI_Conf);										//FLASH整片擦除
 
 
 //************************************以下为内部调用函数
@@ -148,7 +176,7 @@ u32 SPI_FLASH_ReadID(SPI_FLASH_TypeDef *SPI_Conf);										//读FlashID
 
 //------------其它--暂未调试
 void SPI_FLASH_StartReadSequence(SPI_FLASH_TypeDef *SPI_Conf,u32 ReadAddr);	//开始读数据
-u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord);	//发送16位数据
+u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord);				//发送16位数据
 //----------------------------------------------------------------------
 //void SPI_FLASH_WriteCommand(SPI_FLASH_TypeDef *SPI_Conf,u8 Flash_Command);				//写命令
 
