@@ -20,10 +20,12 @@ Page：
 #include "SPI_FLASH.H"
 
 #define USB_TEST_BD				//USB_TEST板
+//#define SPI_FLASH_OSTL
 //#define CMSIS_CDC_BD			//CMSIS-CDC板
+
+#include "string.h"
 //#include "stdlib.h"
 //#include "stdio.h"
-
 
 #include "stm32f10x_spi.h"
 #include "stm32f10x_gpio.h"
@@ -81,14 +83,14 @@ void SPI_FLASH_Configuration(void)
 {
 	SYS_Configuration();											//系统配置 STM32_SYS.H	
 	GPIO_DeInitAll();																							//将所有的GPIO关闭----V20170605
-	PWM_OUT(TIM2,PWM_OUTChannel1,1,500);			//PWM设定-20161127版本
+	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);			//PWM设定-20161127版本
 	
 	USART_DMA_ConfigurationNR	(USART1,115200,(u32*)RxdBuffe,USART_BufferSize);	//USART_DMA配置--查询方式，不开中断
 	
 	SPI_FLASH_Conf(&FLASH_Conf);			//SPI设置
 
 	FlashStatus=WEL_Flag;	
-	SysTick_Configuration(100);							//系统嘀嗒时钟配置72MHz,单位为uS
+	SysTick_Configuration(50);							//系统嘀嗒时钟配置72MHz,单位为uS
 }
 
 /*******************************************************************************
@@ -102,7 +104,8 @@ void SPI_FLASH_Server(void)
 {
 	u16 RxNum=0;
 	u32 Addr=0;
-	
+//	SPI_FLASH_Process(&FLASH_Conf);			//FLASH数据处理：所有的FLASH对外操作接口
+
 	RxNum=USART_ReadBufferIDLE			(USART1,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
 	
 	if(RxNum&&(FlashAddr<128*4*1024))
@@ -112,7 +115,7 @@ void SPI_FLASH_Server(void)
 		FlashAddr+=RxNum;
 	}
 //	itoa(1234567890,TxdBuffe,10);//搜索10代表十进制
-	
+//	SPI_FLASH_Process(&FLASH_Conf);			//FLASH数据处理：所有的FLASH对外操作接口
 	if(Temp!=0)
 	{
 		Temp=0;
@@ -129,6 +132,22 @@ void SPI_FLASH_Server(void)
 		FLASH_ChipEraseFlag++;
 		if(FLASH_ChipEraseFlag==3000)
 		{
+//			memset(testSbuffer,0xFF, FlASH_BufferSize);
+//			SPI_FLASH_BufferWrite(&FLASH_Conf,	testSbuffer, 		0x00, FlASH_BufferSize);	//FLASH写缓冲数据
+			
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;		//请求整片擦除
+//			SPI_FLASH_ChipErase(&FLASH_Conf);																	//FLASH整片擦除
+			
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qSERASE;		//请求整片擦除
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_SectorAdrr=0;
+			
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qBERASE;		//请求整片擦除
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_BlockAdrr=0;
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qREAD;
+//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_LenghToRead=FlASH_BufferSize;
+
+//			SPI_FLASH_ChipErase(&FLASH_Conf);												//FLASH整片擦除
+			
 //			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
 //			{
 //				SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
@@ -153,7 +172,8 @@ void SPI_FLASH_Server(void)
 	RWF++;
 	if(RWF==2000)
 	{
-
+//		FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qREAD;
+//		FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_LenghToRead=FlASH_BufferSize;
 //		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_SectorToErase);			//擦除扇区
 //		SPI_FLASH_BulkErase(&FLASH_Conf);										//FLASH块擦除
 //		SPI_FLASH_ChipErase(&FLASH_Conf);										//FLASH整片擦除
@@ -175,87 +195,6 @@ void SPI_FLASH_Server(void)
 
 		
 	}
-//	Temp=0;
-//	Temp=SPI_FLASH_ReadID();
-	
-//	SPI_FLASH_CS_ENABLE;
-//	SPI_FLASH_SendByte(0x9F);
-//	SPI_FLASH_CS_DISABLE;
-//	u16 num=0xFFFE;
-//	SPI_Cmd(SPI1, ENABLE);
-	/*
-	//1）********SPI发送
-	if(SPI1_NSS==SPI_NSS_Hard)		//1）**********NSS片选方式为硬件方式（SPI_NSS_Hard）时发送数据
-	{
-		SPI_Cmd(SPI1, ENABLE);
-		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-		SPI_I2S_SendData(SPI1,0X55);
-		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
-		SPI_Cmd(SPI1, DISABLE);
-	}
-	else				//2）**********NSS片选方式为软件件方式（SPI_NSS_Soft）时发送数据
-	{
-		GPIO_ResetBits(GPIOA,GPIO_Pin_4);
-		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-		SPI_I2S_SendData(SPI1,0X55);
-		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
-		GPIO_SetBits(GPIOA,GPIO_Pin_4);
-	}
-	//1.2）********SPI2发送
-	if(SPI2_NSS==SPI_NSS_Hard)		//1）**********NSS片选方式为硬件方式（SPI_NSS_Hard）时发送数据
-	{	
-		SPI_Cmd(SPI2, ENABLE);
-		while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
-		SPI_I2S_SendData(SPI2,0XAA);
-		while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY) == SET);
-		SPI_Cmd(SPI2, DISABLE);
-	}
-	else													//2）**********NSS片选方式为软件件方式（SPI_NSS_Soft）时发送数据
-	{
-		GPIO_ResetBits(GPIOB,GPIO_Pin_12);
-		while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
-		SPI_I2S_SendData(SPI2,0XAA);
-		while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY) == SET);
-		GPIO_SetBits(GPIOB,GPIO_Pin_12);
-	}
-	*/
-
-
-//		GPIO_ResetBits(GPIOA,GPIO_Pin_4);
-//		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-//		SPI_I2S_SendData(SPI1,0X55);
-//		while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_BSY) == SET);
-//		GPIO_SetBits(GPIOA,GPIO_Pin_4);
-		
-		
-//	SPI_TX_DMAFlagClear(SPI1);
-	//2）********SPI_DMA发送
-
-//		SPI_Buffer
-//		GPIO_ResetBits(GPIOA,GPIO_Pin_4);
-//		SPI_Cmd(SPI1, ENABLE);
-////		SPI_DMAPrintf(SPI1,"%d",num);		//SPI_DMA发送函数----后边的省略号就是可变参数
-//		//SPI_DMAPrintf(SPI1,"%s",SPI_Buffer);		//SPI_DMA发送函数----后边的省略号就是可变参数
-//		SPI_DMA_BufferWrite(SPI1,(u32*)SPI_Buffer,10);		//SPI_DMA发送函数----后边的省略号就是可变参数
-//		while(SPI_TX_DMAFlagClear(SPI1)==ERROR);
-//		while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
-//		SPI_Cmd(SPI1, DISABLE);
-//		free(SPI_BUFFER);						//释放动态空间
-//		GPIO_SetBits(GPIOA,GPIO_Pin_4);
-//		
-////		GPIO_ResetBits(GPIOB,GPIO_Pin_12);
-//		SPI_Cmd(SPI2, ENABLE);
-////		SPI_DMAPrintf(SPI1,"%d",num);		//SPI_DMA发送函数----后边的省略号就是可变参数
-//		//SPI_DMAPrintf(SPI1,"%s",SPI_Buffer);		//SPI_DMA发送函数----后边的省略号就是可变参数
-//		SPI_DMA_BufferWrite(SPI2,(u32*)SPI_Buffer,10);		//SPI_DMA发送函数----后边的省略号就是可变参数
-//		while(SPI_TX_DMAFlagClear(SPI2)==ERROR);
-//		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET);
-//		SPI_Cmd(SPI2, DISABLE);
-//		free(SPI_BUFFER);						//释放动态空间
-//		GPIO_SetBits(GPIOB,GPIO_Pin_12);
-
-
-//	free(SPI_BUFFER);						//释放动态空间
 }
 /*******************************************************************************
 *函数名			:	function
@@ -271,7 +210,7 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_Conf->SPIx=SPI2;
 	SPI_Conf->SPI_CS_PORT=GPIOC;
 	SPI_Conf->SPI_CS_PIN=GPIO_Pin_8;	
-	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_32;
+	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_2;
 	
 	#else
 	
@@ -283,6 +222,7 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	#endif
 	
 	SPI_FLASH_ConfigurationNR(SPI_Conf);				//普通SPI接口配置
+//	SPI_FLASH_ConfigurationDMA(SPI_Conf);			//SPI_FLASH_DMA方式配置
 	SPI_FLASH_GetInfo(SPI_Conf);								//获取FLASH信息---根据ID确定FLASH型号，配置页大小，扇区大小，块大小参数
 	
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;			//初始状态为空闲状态
@@ -579,11 +519,7 @@ void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf)
 *返回值		:	无
 *例程			:
 *******************************************************************************/
-void SPI_FLASH_ConfigurationDMA(
-																SPI_FLASH_TypeDef *SPI_Conf,		//SPI结构体
-																u32* SPI_RX_Buffer,							//接收缓冲区地址::发送缓冲区地址在发送数据时设定，配置时借用接收缓冲区地址完成配置
-																u32 SPI_BUFFERSIZE							//缓冲区大小
-)		//SPI_FLASH_DMA方式配置
+void SPI_FLASH_ConfigurationDMA(SPI_FLASH_TypeDef *SPI_Conf)		//SPI_FLASH_DMA方式配置
 {
 /**-----------------------------------------------------------------------------------------------------
 	********SPI_DMA的通信过程********
@@ -641,9 +577,9 @@ void SPI_FLASH_ConfigurationDMA(
 	{
 		//5)**********DMA发送初始化，外设作为DMA的目的端
 		DMA_Initstructure.DMA_PeripheralBaseAddr =  (u32)(&(SPI_Conf->SPIx)->DR);	//DMA外设源地址
-		DMA_Initstructure.DMA_MemoryBaseAddr     = (u32)SPI_RX_Buffer;						//DMA数据内存地址
+		DMA_Initstructure.DMA_MemoryBaseAddr     = (u32)SPI_Conf->SPI_FLASH_Info.MOSI_Buffer;						//DMA数据内存地址
 		DMA_Initstructure.DMA_DIR = DMA_DIR_PeripheralDST;												//DMA_DIR_PeripheralDST（外设作为DMA的目的端），DMA_DIR_PeripheralSRC（外设作为数据传输的来源）
-		DMA_Initstructure.DMA_BufferSize = SPI_BUFFERSIZE; 												//指定DMA通道的DMA缓存的大小
+		DMA_Initstructure.DMA_BufferSize = 0; 																		//指定DMA通道的DMA缓存的大小
 		DMA_Initstructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;					//DMA_PeripheralInc_Enable（外设地址寄存器递增），DMA_PeripheralInc_Disable（外设地址寄存器不变），
 		DMA_Initstructure.DMA_MemoryInc =DMA_MemoryInc_Enable;										//DMA_MemoryInc_Enable（内存地址寄存器递增），DMA_MemoryInc_Disable（内存地址寄存器不变）
 		DMA_Initstructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;		//外设数据宽度--DMA_PeripheralDataSize_Byte（数据宽度为8位），DMA_PeripheralDataSize_HalfWord（数据宽度为16位），DMA_PeripheralDataSize_Word（数据宽度为32位）
@@ -655,9 +591,9 @@ void SPI_FLASH_ConfigurationDMA(
 
 		//6)**********DMA接收初始化，外设作为DMA的源端
 		DMA_Initstructure.DMA_PeripheralBaseAddr =  (u32)(&(SPI_Conf->SPIx)->DR);	//DMA外设源地址
-		DMA_Initstructure.DMA_MemoryBaseAddr     = 	(u32)SPI_RX_Buffer;						//DMA数据内存地址
+		DMA_Initstructure.DMA_MemoryBaseAddr     = 	(u32)SPI_Conf->SPI_FLASH_Info.MISO_Buffer;						//DMA数据内存地址
 		DMA_Initstructure.DMA_DIR = DMA_DIR_PeripheralSRC;												//DMA_DIR_PeripheralDST（外设作为DMA的目的端），DMA_DIR_PeripheralSRC（外设作为数据传输的来源）
-		DMA_Initstructure.DMA_BufferSize = SPI_BUFFERSIZE; 												//指定DMA通道的DMA缓存的大小
+		DMA_Initstructure.DMA_BufferSize = 0; 																		//指定DMA通道的DMA缓存的大小
 		DMA_Initstructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;					//DMA_PeripheralInc_Enable（外设地址寄存器递增），DMA_PeripheralInc_Disable（外设地址寄存器不变），
 		DMA_Initstructure.DMA_MemoryInc =DMA_MemoryInc_Enable;										//DMA_MemoryInc_Enable（内存地址寄存器递增），DMA_MemoryInc_Disable（内存地址寄存器不变）
 		DMA_Initstructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;		//外设数据宽度--DMA_PeripheralDataSize_Byte（数据宽度为8位），DMA_PeripheralDataSize_HalfWord（数据宽度为16位），DMA_PeripheralDataSize_Word（数据宽度为32位）
@@ -678,6 +614,7 @@ void SPI_FLASH_ConfigurationDMA(
 		DMA_Cmd(DMAx_Channelrx,DISABLE);	
 		DMA_Cmd(DMAx_Channeltx,DISABLE);
 	}
+	SPI_Conf->SPI_Flash_USER_DMAFlg=1;	//如果使用DMA，	SPI_Flash_USER_DMAFlg=1，	否则SPI_Flash_USER_DMAFlg=0；此由SPI_FLASH_ConfigurationDMA根据SPI配置判断设置此值
 	//使能SPIx
 	SPI_Cmd(SPI_Conf->SPIx, DISABLE);
 }
@@ -698,26 +635,96 @@ void SPI_FLASH_ConfigurationDMA(
 *******************************************************************************/
 void SPI_FLASH_PageWrite(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite)	//FLASH写一页数据
 {
-	if(NumByteToWrite)
+	if(SPI_Conf->SPI_Flash_USER_DMAFlg==1)			//使用DMA
 	{
-		SPI_FLASH_WriteEnable(SPI_Conf);											//0x06写使能
-		
-		SPI_FLASH_ENALBE(SPI_Conf);														//SPI_FLASH_使能
-		
-		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WPAGE);											//页写命令
-		SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF0000) >> 16);		//写入高8位地址
-		SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF00) >> 8);				//写入中间8位地址
-		SPI_FLASH_WriteReadByte(SPI_Conf,WriteAddr & 0xFF);								//写入低8位地址
-		
-		while (NumByteToWrite--)		//开始写入数据，直到写完
+		if(NumByteToWrite)
 		{
-			SPI_FLASH_WriteReadByte(SPI_Conf,*pBuffer);				//写入数据
-			pBuffer++;
+			SPI_FLASH_WriteEnable(SPI_Conf);											//0x06写使能
+			
+			SPI_FLASH_ENALBE(SPI_Conf);														//SPI_FLASH_使能
+			
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WPAGE);										//0x02页写命令
+			SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF0000) >> 16);		//写入高8位地址
+			SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF00) >> 8);			//写入中间8位地址
+			SPI_FLASH_WriteReadByte(SPI_Conf,WriteAddr & 0xFF);								//写入低8位地址
+			
+			if(SPI_Conf->SPIx==SPI1)
+			{
+				//DMA接收设置						
+				DMA1_Channel2->CMAR =(u32)SPI_Conf->SPI_FLASH_Info.MISO_Buffer;			//接收缓冲区
+				DMA1_Channel2->CNDTR =NumByteToWrite;																//设定接收送缓冲区大小
+				DMA_Cmd(DMA1_Channel2,ENABLE);																			//DMA发送开启3
+				//DMA发送设置
+				DMA1_Channel3->CMAR=(u32)pBuffer;			//发送缓冲区
+				DMA1_Channel3->CNDTR=NumByteToWrite;																//设定待发送缓冲区大小		
+				DMA_Cmd(DMA1_Channel3,ENABLE);  																		//开启接收DMA
+				while (DMA_GetCurrDataCounter(DMA1_Channel2)!=0);										//开始写入数据，直到写完(接收缓冲区满）
+				DMA_Cmd(DMA1_Channel2,DISABLE);																	//DMA接收关闭
+				DMA_Cmd(DMA1_Channel3,DISABLE);  																//DMA发送关闭
+				DMA_ClearFlag(DMA1_FLAG_GL2);			//清除DMA标志
+				DMA_ClearFlag(DMA1_FLAG_GL3);			//清除DMA标志
+			}
+			else if(SPI_Conf->SPIx==SPI2)
+			{
+				//DMA接收设置						
+				DMA1_Channel4->CMAR =(u32)SPI_Conf->SPI_FLASH_Info.MISO_Buffer;			//接收缓冲区	
+				DMA1_Channel4->CNDTR =NumByteToWrite;																//设定接收送缓冲区大小
+				DMA_Cmd(DMA1_Channel4,ENABLE);																			//DMA接收开启3
+				//DMA发送设置
+				DMA1_Channel5->CMAR=(u32)pBuffer;			//发送缓冲区
+				DMA1_Channel5->CNDTR=NumByteToWrite;																//设定待发送缓冲区大小
+				DMA_Cmd(DMA1_Channel5,ENABLE);  																		//DMA发送开启
+				while (DMA_GetCurrDataCounter(DMA1_Channel4)!=0);										//开始写入数据，直到写完(接收缓冲区满）
+				DMA_Cmd(DMA1_Channel4,DISABLE);																	//DMA接收关闭
+				DMA_Cmd(DMA1_Channel5,DISABLE);  																//DMA发送关闭
+				DMA_ClearFlag(DMA1_FLAG_GL4);			//清除DMA标志
+				DMA_ClearFlag(DMA1_FLAG_GL5);			//清除DMA标志
+			}
+			else if(SPI_Conf->SPIx==SPI3)
+			{
+				//DMA接收设置						
+				DMA2_Channel1->CMAR =(u32)SPI_Conf->SPI_FLASH_Info.MISO_Buffer;			//接收缓冲区
+				DMA2_Channel1->CNDTR =NumByteToWrite;																//设定接收送缓冲区大小
+				DMA_Cmd(DMA2_Channel1,ENABLE);																			//DMA发送开启3
+				//DMA发送设置
+				DMA2_Channel2->CMAR=(u32)pBuffer;																		//发送缓冲区
+				DMA2_Channel2->CNDTR=NumByteToWrite;																//设定待发送缓冲区大小		
+				DMA_Cmd(DMA2_Channel2,ENABLE);  																		//开启接收DMA
+				while (DMA_GetCurrDataCounter(DMA2_Channel1)!=0);											//开始写入数据，直到写完(接收缓冲区满）
+				DMA_Cmd(DMA2_Channel1,DISABLE);																	//DMA接收关闭
+				DMA_Cmd(DMA2_Channel2,DISABLE);  																//DMA发送关闭
+				DMA_ClearFlag(DMA2_FLAG_GL1);			//清除DMA标志
+				DMA_ClearFlag(DMA2_FLAG_GL2);			//清除DMA标志
+			}
+
+			SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭			
+			SPI_FLASH_WaitForWriteEnd(SPI_Conf);						//等待写入完成
 		}
-		SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
+	}
+	else
+	{
+		if(NumByteToWrite)
+		{
+			SPI_FLASH_WriteEnable(SPI_Conf);											//0x06写使能
+			
+			SPI_FLASH_ENALBE(SPI_Conf);														//SPI_FLASH_使能
+			
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WPAGE);											//页写命令
+			SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF0000) >> 16);		//写入高8位地址
+			SPI_FLASH_WriteReadByte(SPI_Conf,(WriteAddr & 0xFF00) >> 8);				//写入中间8位地址
+			SPI_FLASH_WriteReadByte(SPI_Conf,WriteAddr & 0xFF);								//写入低8位地址
+			
+			while (NumByteToWrite--)		//开始写入数据，直到写完
+			{
+				SPI_FLASH_WriteReadByte(SPI_Conf,*pBuffer);				//写入数据
+				pBuffer++;
+			}
+			SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
+			
+			SPI_FLASH_WaitForWriteEnd(SPI_Conf);						//等待写入完成
+		}
+	}
 		
-		SPI_FLASH_WaitForWriteEnd(SPI_Conf);						//等待写入完成
-	}	
 }
 /*******************************************************************************
 * Function Name  : SPI_FLASH_BufferWrite
@@ -819,31 +826,178 @@ void SPI_FLASH_BufferRead(
 													u16 NumByteToRead			//待读取字节数
 )
 {
-	if(NumByteToRead)
-	{
-		SPI_FLASH_WaitForWriteEnd(SPI_Conf);	//等待FLASH写完成
-		
-		SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
-		
-		/* Send "Read from Memory " instruction */
-		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);
-
-		/* Send ReadAddr high nibble address byte to read from */
-		SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);
-		/* Send ReadAddr medium nibble address byte to read from */
-		SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);
-		/* Send ReadAddr low nibble address byte to read from */
-		SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);
-
-		while (NumByteToRead--) /* while there is data to be read */
+	#ifdef SPI_FLASH_OSTL
+		if(NumByteToRead)
 		{
-			/* Read a byte from the FLASH */
-			*pBuffer = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);
-			/* Point to the next location where the byte read will be saved */
-			pBuffer++;
-		}
-		SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
-	}
+			if(SPI_Conf->SPI_Flash_USER_DMAFlg==1)			//使用DMA
+			{				
+//				DMA_GetCurrDataCounter(DMA_Channel_TypeDef* DMAy_Channelx);																//返回当前DMA通道x剩余的待传输数据数目
+				if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)			//第一阶段
+				{
+					memset(SPI_Conf->SPI_FLASH_Info.MOSI_Buffer,Dummy_Byte, NumByteToRead);
+					SPI_FLASH_WaitForWriteEnd(SPI_Conf);			//等待FLASH写完成			
+					SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
+					SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);										//0x03	读数据
+					SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);	//写入地址高8位
+					SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);			//写入地址中间8位
+					SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);							//写入地址低8位
+					
+					if(SPI_Conf->SPIx==SPI1)
+					{
+//						DMA_Cmd(DMA1_Channel2,DISABLE);																	//DMA接收关闭
+//						DMA_Cmd(DMA1_Channel3,DISABLE);  																//DMA发送关闭
+//						DMA_ClearFlag(DMA1_FLAG_GL2);																		//清除DMA标志
+//						DMA_ClearFlag(DMA1_FLAG_GL3);																		//清除DMA标志
+						//设置空闲操作符
+						
+						//DMA接收设置						
+						DMA1_Channel2->CMAR =(u32)pBuffer;																	//接收缓冲区	
+						DMA1_Channel2->CNDTR =NumByteToRead;																//设定接收送缓冲区大小
+						DMA_Cmd(DMA1_Channel2,ENABLE);																			//DMA发送开启3
+						//DMA发送设置
+						DMA1_Channel3->CMAR=(u32)SPI_Conf->SPI_FLASH_Info.MOSI_Buffer;			//发送缓冲区
+						DMA1_Channel3->CNDTR=NumByteToRead;																	//设定待发送缓冲区大小		
+						DMA_Cmd(DMA1_Channel3,ENABLE);  																		//开启接收DMA
+						SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_READ;
+					}
+					else if(SPI_Conf->SPIx==SPI2)
+					{
+//						DMA_Cmd(DMA1_Channel4,DISABLE);																	//DMA接收关闭
+//						DMA_Cmd(DMA1_Channel5,DISABLE);  																//DMA发送关闭
+//						DMA_ClearFlag(DMA1_FLAG_GL4);			//清除DMA标志
+//						DMA_ClearFlag(DMA1_FLAG_GL5);			//清除DMA标志
+						//设置空闲操作符
+						//DMA接收设置						
+						DMA1_Channel4->CMAR =(u32)pBuffer;																	//接收缓冲区	
+						DMA1_Channel4->CNDTR =NumByteToRead;																//设定接收送缓冲区大小
+						DMA_Cmd(DMA1_Channel4,ENABLE);																			//DMA接收开启3
+						//DMA发送设置
+						DMA1_Channel5->CMAR=(u32)SPI_Conf->SPI_FLASH_Info.MOSI_Buffer;			//发送缓冲区
+						DMA1_Channel5->CNDTR=NumByteToRead;																	//设定待发送缓冲区大小
+						DMA_Cmd(DMA1_Channel5,ENABLE);  																		//DMA发送开启
+//						SPI_Cmd(SPI_Conf->SPIx, ENABLE);
+						SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_READ;
+					}
+					else if(SPI_Conf->SPIx==SPI3)
+					{
+//						DMA_Cmd(DMA2_Channel1,DISABLE);																	//DMA接收关闭
+//						DMA_Cmd(DMA2_Channel2,DISABLE);  																//DMA发送关闭
+//						DMA_ClearFlag(DMA2_FLAG_GL1);			//清除DMA标志
+//						DMA_ClearFlag(DMA2_FLAG_GL2);			//清除DMA标志
+						//设置空闲操作符
+						//DMA接收设置						
+						DMA2_Channel1->CMAR =(u32)pBuffer;																	//接收缓冲区
+						DMA2_Channel1->CNDTR =NumByteToRead;																//设定接收送缓冲区大小
+						DMA_Cmd(DMA2_Channel1,ENABLE);																			//DMA发送开启3
+						//DMA发送设置
+						DMA2_Channel2->CMAR=(u32)SPI_Conf->SPI_FLASH_Info.MOSI_Buffer;			//发送缓冲区
+						DMA2_Channel2->CNDTR=NumByteToRead;																	//设定待发送缓冲区大小		
+						DMA_Cmd(DMA2_Channel2,ENABLE);  																		//开启接收DMA
+						SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_READ;
+					}
+				}
+				else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_READ)	//第二阶段
+				{
+					if(SPI_Conf->SPIx==SPI1)
+					{
+						if(DMA_GetCurrDataCounter(DMA1_Channel2)==0)	//DMA_GetCurrDataCounter(DMA_Channel_TypeDef* DMAy_Channelx);																//返回当前DMA通道x剩余的待传输数据数目
+						{
+							SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+							DMA_Cmd(DMA1_Channel2,DISABLE);																	//DMA接收关闭
+							DMA_Cmd(DMA1_Channel3,DISABLE);  																//DMA发送关闭
+							DMA_ClearFlag(DMA1_FLAG_GL2);			//清除DMA标志
+							DMA_ClearFlag(DMA1_FLAG_GL3);			//清除DMA标志
+							
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;										//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;			//清除FLASH擦除请求	
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;				//FLASH回到空闲状态
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;							//继续检查写允许标志
+						}
+					}
+					else if(SPI_Conf->SPIx==SPI2)
+					{
+						if(DMA_GetCurrDataCounter(DMA1_Channel4)==0)	//DMA_GetCurrDataCounter(DMA_Channel_TypeDef* DMAy_Channelx);																//返回当前DMA通道x剩余的待传输数据数目
+						{
+							SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+							DMA_Cmd(DMA1_Channel4,DISABLE);																	//DMA接收关闭
+							DMA_Cmd(DMA1_Channel5,DISABLE);  																//DMA发送关闭
+							DMA_ClearFlag(DMA1_FLAG_GL4);			//清除DMA标志
+							DMA_ClearFlag(DMA1_FLAG_GL5);			//清除DMA标志
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;										//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;			//清除FLASH擦除请求	
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;				//FLASH回到空闲状态
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;							//继续检查写允许标志
+						}
+					}
+					else if(SPI_Conf->SPIx==SPI3)
+					{
+						if(DMA_GetCurrDataCounter(DMA2_Channel1)==0)	//DMA_GetCurrDataCounter(DMA_Channel_TypeDef* DMAy_Channelx);																//返回当前DMA通道x剩余的待传输数据数目
+						{
+							SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+							DMA_Cmd(DMA2_Channel1,DISABLE);																	//DMA接收关闭
+							DMA_Cmd(DMA2_Channel2,DISABLE);  																//DMA发送关闭
+							DMA_ClearFlag(DMA2_FLAG_GL1);			//清除DMA标志
+							DMA_ClearFlag(DMA2_FLAG_GL2);			//清除DMA标志
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;										//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;			//清除FLASH擦除请求	
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;				//FLASH回到空闲状态
+							SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;							//继续检查写允许标志
+						}
+					}
+//					SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;										//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
+//					SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;			//清除FLASH擦除请求	
+//					SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;				//FLASH回到空闲状态
+//					SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;							//继续检查写允许标志
+				}
+				
+			}
+			else
+			{
+				SPI_FLASH_WaitForWriteEnd(SPI_Conf);			//等待FLASH写完成			
+				SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
+				SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);										//0x03	读数据
+				SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);	//写入地址高8位
+				SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);			//写入地址中间8位
+				SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);							//写入地址低8位
+				
+				while (NumByteToRead--) 	//循环读数据
+				{
+					*pBuffer = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);			//读数据
+					pBuffer++;																										//地址++
+				}
+				SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;										//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;			//清除FLASH擦除请求	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;				//FLASH回到空闲状态
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;							//继续检查写允许标志
+			}			
+		}		
+	#else
+		if(NumByteToRead)
+		{
+			SPI_FLASH_WaitForWriteEnd(SPI_Conf);			//等待FLASH写完成			
+			SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
+
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_READ);										//0x03	读数据
+			SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr & 0xFF0000) >> 16);	//写入地址高8位
+			SPI_FLASH_WriteReadByte(SPI_Conf,(ReadAddr& 0xFF00) >> 8);			//写入地址中间8位
+			SPI_FLASH_WriteReadByte(SPI_Conf,ReadAddr & 0xFF);							//写入地址低8位
+
+			if(SPI_Conf->SPI_Flash_USER_DMAFlg==1)			//使用DMA
+			{
+				
+			}
+			else
+			{
+				while (NumByteToRead--) 	//循环读数据
+				{
+					*pBuffer = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);			//读数据
+					pBuffer++;																										//地址++
+				}
+				SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+			}
+		}		
+	#endif	
 }
 
 
@@ -953,46 +1107,31 @@ void SPI_FLASH_Process(SPI_FLASH_TypeDef *SPI_Conf)			//FLASH数据处理：所有的FLA
 	//1)FLASH状态处理
 	if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_IDLE)	//FLASH为空闲状态
 	{
-		//读请求
-		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qREAD)			//读请求
-		{
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_READ;					//状态值：读
-		}
-		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qERASE)		//擦除请求
-		{
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_ERASE;					//状态值：擦除
-		}
-		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite!=0)					//写请求
-		{
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_WRITE;					//状态值：写
-		}
-		SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;		//执行状态为初始状态
+		SPI_FLASH_ReadRequest(SPI_Conf);														//获取FLASH操作请求
 	}
 	else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_READ)			//读状态
 	{
-		if(SPI_Conf->SPI_Flash_USER_DMAFlg==1)			//使用DMA
-		{
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;								//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
-		}
-		else
-		{
-			SPI_FLASH_BufferRead(SPI_Conf,SPI_Conf->SPI_FLASH_Info.MISO_Buffer, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadAdrr, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToRead);
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadFlg=1;								//SPI_FLASH读数标志，如果SPI_FLASH_ReadFlg==1：读到数据，SPI_FLASH_ReadFlg==0，未读到数据
-			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;
-		}
+		SPI_FLASH_BufferRead(SPI_Conf,SPI_Conf->SPI_FLASH_Info.MISO_Buffer, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_ReadAdrr, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToRead);
 	}
 	else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_ERASE)		//擦除
 	{
-		SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
-		SPI_Cmd(SPI_Conf->SPIx, ENABLE);					//使能SPI
-		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);	//0x06使能写命令
-		SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭
-		
-		SPI_FLASH_ChipErase		(SPI_Conf);																		//FLASH整片擦除
+		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qCERASE)										//整片擦除请求
+			SPI_FLASH_ChipErase		(SPI_Conf);																									//FLASH整片擦除
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qBERASE)							//块擦除请求
+			SPI_FLASH_BulkErase		(SPI_Conf,SPI_Conf->SPI_FLASH_Info.SPI_FLASH_BlockAdrr);		//Flash块擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qSERASE)							//扇区擦除请求
+			SPI_FLASH_SectorErase	(SPI_Conf,SPI_Conf->SPI_FLASH_Info.SPI_FLASH_SectorAdrr);		//Flash扇区擦除Fast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
+		else
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;		//清除FLASH擦除请求	
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;			//FLASH回到空闲状态
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;						//继续检查写允许标志
+		}
+			
 	}
 	else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_WRITE)		//写
 	{
+		SPI_FLASH_BufferWrite(SPI_Conf,SPI_Conf->SPI_FLASH_Info.MOSI_Buffer, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_WriteAdrr, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite);	//FLASH写缓冲数据
 	}
 }
 /*******************************************************************************
@@ -1009,25 +1148,10 @@ void SPI_FLASH_ENALBE(SPI_FLASH_TypeDef *SPI_Conf)				//SPI_FLASH_使能
 	}
 	else
 	{
-		
+		u8 num=50;
 		SPI_Cmd(SPI_Conf->SPIx, ENABLE);	//使能SPI
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
+		while(num--);
 		GPIO_ResetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);	//CS_LOW片选使能
-																	
 	}
 	
 }
@@ -1045,22 +1169,8 @@ void SPI_FLASH_DISALBE(SPI_FLASH_TypeDef *SPI_Conf)				//SPI_FLASH_关闭
 	}
 	else
 	{
-		SPI_Cmd(SPI_Conf->SPIx, DISABLE);															//关闭SPI
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
-		__nop();
+//		u8 num=50;
+		SPI_Cmd(SPI_Conf->SPIx, DISABLE);															//关闭SPI				
 		GPIO_SetBits(SPI_Conf->SPI_CS_PORT, SPI_Conf->SPI_CS_PIN);		//CS_HIGH禁止片选
 	}	
 }
@@ -1275,6 +1385,37 @@ void SPI_FLASH_WaitForWriteEnd(SPI_FLASH_TypeDef *SPI_Conf)	//等待FLASH写完成
 }
 /*******************************************************************************
 *函数名			:	function
+*功能描述		:	获取FLASH操作请求
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void SPI_FLASH_ReadRequest(SPI_FLASH_TypeDef *SPI_Conf)
+{
+		//读请求
+		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qREAD)			//读请求
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_READ;					//状态值：读
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qCERASE)		//擦除请求
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_ERASE;					//状态值：擦除
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qBERASE)		//擦除请求
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_ERASE;					//状态值：擦除
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request==SPI_FLASH_qSERASE)		//擦除请求
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_ERASE;					//状态值：擦除
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite!=0)					//写请求
+		{
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_WRITE;					//状态值：写
+		}
+		SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;		//执行状态为初始状态
+}
+/*******************************************************************************
+*函数名			:	function
 *功能描述		:	函数功能说明
 *输入				: 
 *返回值			:	无
@@ -1345,24 +1486,96 @@ u32 SPI_FLASH_ReadID(SPI_FLASH_TypeDef *SPI_Conf)
 *******************************************************************************/
 void SPI_FLASH_SectorErase(SPI_FLASH_TypeDef *SPI_Conf,u32 SectorAddr)
 {	
-  /* Send write enable instruction */
-	SPI_FLASH_WaitForWriteEnd(SPI_Conf);			//等待FLASH写完成
-  SPI_FLASH_WriteEnable(SPI_Conf);					//写使能
-	
-  SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
-  /* Send Sector Erase instruction */
-  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_SE);
-  /* Send SectorAddr high nibble address byte */
-  SPI_FLASH_WriteReadByte(SPI_Conf,(SectorAddr & 0xFF0000) >> 16);
-  /* Send SectorAddr medium nibble address byte */
-  SPI_FLASH_WriteReadByte(SPI_Conf,(SectorAddr & 0xFF00) >> 8);
-  /* Send SectorAddr low nibble address byte */
-  SPI_FLASH_WriteReadByte(SPI_Conf,SectorAddr & 0xFF);
-	
-	SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭;
-	
-  /* Wait the end of Flash writing */
-  SPI_FLASH_WaitForWriteEnd(SPI_Conf);	
+	#ifdef SPI_FLASH_OSTL
+	if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_ERASE)
+	{
+		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
+		{
+			SPI_FLASH_ENALBE(SPI_Conf);													//SPI_FLASH_使能
+			SPI_Cmd(SPI_Conf->SPIx, ENABLE);										//使能SPI
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);				//0x06使能写命令
+			SPI_FLASH_DISALBE(SPI_Conf);												//SPI_FLASH_关闭
+			
+			SPI_FLASH_ENALBE(SPI_Conf);													//SPI_FLASH_使能		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);				//0x05写入读状态命令 */		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);				//读状态 */			
+			SPI_FLASH_DISALBE(SPI_Conf);												//SPI_FLASH_关闭
+			
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WIP0;			//进入擦除步骤	
+
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_WIP0)
+		{
+			u8 FLASH_Status=0;
+			
+			SPI_FLASH_ENALBE(SPI_Conf);																		//SPI_FLASH_使能
+			SPI_Cmd(SPI_Conf->SPIx, ENABLE);															//使能SPI
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);									//0x06使能写命令
+			SPI_FLASH_DISALBE(SPI_Conf);																	//SPI_FLASH_关闭
+			
+			SPI_FLASH_ENALBE(SPI_Conf);																		//SPI_FLASH_使能		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);									//0x05写入读状态命令 */		
+			FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);	//读状态 */			
+			SPI_FLASH_DISALBE(SPI_Conf);																	//SPI_FLASH_关闭
+			
+			if((FLASH_Status&WEL_Flag)==WEL_Flag)		//写允许标志
+			{
+				//写入状态寄存器值---去除写保护
+				SPI_FLASH_ENALBE(SPI_Conf);										//SPI_FLASH_使能
+				SPI_FLASH_WriteReadByte(SPI_Conf,Flash_SE);		//0x20	//芯片擦除; 扇区擦除
+				SPI_FLASH_WriteReadByte(SPI_Conf,(SectorAddr & 0xFF0000) >> 16);		//扇区地址高8位	
+				SPI_FLASH_WriteReadByte(SPI_Conf,(SectorAddr & 0xFF00) >> 8);				//扇区地址中间8位
+				SPI_FLASH_WriteReadByte(SPI_Conf,SectorAddr & 0xFF);								//扇区地址低8位
+				SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+				
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_ERASE;			//进入擦除步骤				
+			}
+			else		//写未允许
+			{
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WIP0;				//继续检查写允许标志
+			}
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_ERASE)	//检查擦除完成
+		{
+			u8 FLASH_Status = 0;
+
+			SPI_FLASH_ENALBE(SPI_Conf);																			//SPI_FLASH_使能			
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);										//0x05发送读状态寄存器命令
+			FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);		//读状态值，
+			SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+			
+			if((FLASH_Status&WIP_Flag)!=WIP_Flag)						//不在写状态，表明擦除完成，退出擦除状态
+			{	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;		//清除FLASH擦除请求	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;			//FLASH回到空闲状态
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;						//继续检查写允许标志				
+			}
+			else		//写未允许
+			{
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_ERASE;				//继续检查写允许标志
+			}
+		}
+	}
+	#else
+		/* Send write enable instruction */
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);			//等待FLASH写完成
+		SPI_FLASH_WriteEnable(SPI_Conf);					//写使能
+		
+		SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
+		/* Send Sector Erase instruction */
+		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_SE);
+		/* Send SectorAddr high nibble address byte */
+		SPI_FLASH_WriteReadByte(SPI_Conf,(SectorAddr & 0xFF0000) >> 16);
+		/* Send SectorAddr medium nibble address byte */
+		SPI_FLASH_WriteReadByte(SPI_Conf,(SectorAddr & 0xFF00) >> 8);
+		/* Send SectorAddr low nibble address byte */
+		SPI_FLASH_WriteReadByte(SPI_Conf,SectorAddr & 0xFF);
+		
+		SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭;
+		
+		/* Wait the end of Flash writing */
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);
+	#endif
 }
 
 /*******************************************************************************
@@ -1372,16 +1585,91 @@ void SPI_FLASH_SectorErase(SPI_FLASH_TypeDef *SPI_Conf,u32 SectorAddr)
 * Output         : None
 * Return         : None
 *******************************************************************************/
-void SPI_FLASH_BulkErase(SPI_FLASH_TypeDef *SPI_Conf)
+void SPI_FLASH_BulkErase(SPI_FLASH_TypeDef *SPI_Conf,u32 BulkAddr)
 {
-  SPI_FLASH_WriteEnable(SPI_Conf);					//FLASH写使能--等待空闲
-	SPI_FLASH_WaitForWriteEnd(SPI_Conf);			//等待FLASH写完成--等待空闲
-	
-	SPI_FLASH_ENALBE(SPI_Conf);								//SPI_FLASH_使能
-  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_BE);		//写入块擦除命令
-	SPI_FLASH_DISALBE(SPI_Conf);							//SPI_FLASH_关闭	
+	#ifdef SPI_FLASH_OSTL
+	if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_ERASE)
+	{
+		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
+		{
+			SPI_FLASH_ENALBE(SPI_Conf);													//SPI_FLASH_使能
+			SPI_Cmd(SPI_Conf->SPIx, ENABLE);										//使能SPI
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);				//0x06使能写命令
+			SPI_FLASH_DISALBE(SPI_Conf);												//SPI_FLASH_关闭
+			
+			SPI_FLASH_ENALBE(SPI_Conf);													//SPI_FLASH_使能		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);				//0x05写入读状态命令 */		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);				//读状态 */			
+			SPI_FLASH_DISALBE(SPI_Conf);												//SPI_FLASH_关闭
+			
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WIP0;			//进入擦除步骤	
 
-  SPI_FLASH_WaitForWriteEnd(SPI_Conf);//等待FLASH写完成--等待空闲	
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_WIP0)
+		{
+			u8 FLASH_Status=0;
+			
+			SPI_FLASH_ENALBE(SPI_Conf);																		//SPI_FLASH_使能
+			SPI_Cmd(SPI_Conf->SPIx, ENABLE);															//使能SPI
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);									//0x06使能写命令
+			SPI_FLASH_DISALBE(SPI_Conf);																	//SPI_FLASH_关闭
+			
+			SPI_FLASH_ENALBE(SPI_Conf);																		//SPI_FLASH_使能		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);									//0x05写入读状态命令 */		
+			FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);	//读状态 */			
+			SPI_FLASH_DISALBE(SPI_Conf);																	//SPI_FLASH_关闭
+			
+			if((FLASH_Status&WEL_Flag)==WEL_Flag)		//写允许标志
+			{
+				//写入状态寄存器值---去除写保护
+				SPI_FLASH_ENALBE(SPI_Conf);																				//SPI_FLASH_使能
+				SPI_FLASH_WriteReadByte(SPI_Conf,Flash_BE);												//0x52	//块擦除		也可以用0XD8
+				SPI_FLASH_WriteReadByte(SPI_Conf,(BulkAddr & 0xFF0000) >> 16);		//块地址高8位	
+				SPI_FLASH_WriteReadByte(SPI_Conf,(BulkAddr & 0xFF00) >> 8);				//块地址中间8位
+				SPI_FLASH_WriteReadByte(SPI_Conf,BulkAddr & 0xFF);								//块地址低8位
+				SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+				
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_ERASE;			//进入擦除步骤				
+			}
+			else		//写未允许
+			{
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WIP0;				//继续检查写允许标志
+			}
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_ERASE)	//检查擦除完成
+		{
+			u8 FLASH_Status = 0;
+
+			SPI_FLASH_ENALBE(SPI_Conf);																			//SPI_FLASH_使能			
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);										//0x05发送读状态寄存器命令
+			FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);		//读状态值，
+			SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+			
+			if((FLASH_Status&WIP_Flag)!=WIP_Flag)						//不在写状态，表明擦除完成，退出擦除状态
+			{	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;		//清除FLASH擦除请求	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;			//FLASH回到空闲状态
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;						//继续检查写允许标志				
+			}
+			else		//写未允许
+			{
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_ERASE;				//继续检查写允许标志
+			}
+		}
+	}
+	#else
+		SPI_FLASH_WriteEnable(SPI_Conf);							//FLASH写使能--等待空闲
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);					//等待FLASH写完成--等待空闲
+		
+		SPI_FLASH_ENALBE(SPI_Conf);										//SPI_FLASH_使能
+		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_BE);		//写入块擦除命令
+		SPI_FLASH_WriteReadByte(SPI_Conf,(BulkAddr & 0xFF0000) >> 16);		//扇区地址高8位	
+		SPI_FLASH_WriteReadByte(SPI_Conf,(BulkAddr & 0xFF00) >> 8);				//扇区地址中间8位
+		SPI_FLASH_WriteReadByte(SPI_Conf,BulkAddr & 0xFF);								//扇区地址低8位
+		SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭	
+
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);					//等待FLASH写完成--等待空闲	
+	#endif
 }
 /*******************************************************************************
 * Function Name  : SPI_FLASH_BulkErase
@@ -1392,21 +1680,82 @@ void SPI_FLASH_BulkErase(SPI_FLASH_TypeDef *SPI_Conf)
 *******************************************************************************/
 void SPI_FLASH_ChipErase(SPI_FLASH_TypeDef *SPI_Conf)
 {
-  /* Send write enable instruction */
-  SPI_FLASH_WriteEnable(SPI_Conf);
-	/* 等待FLASH写完成*/
-	SPI_FLASH_WaitForWriteEnd(SPI_Conf);		//等待FLASH写完成
-	/* Chip Erase */
-	/* Select the FLASH: Chip Select low */
-  SPI_FLASH_ENALBE(SPI_Conf);												//SPI_FLASH_使能
-	
-  /* Send Bulk Erase instruction  */
-  SPI_FLASH_WriteReadByte(SPI_Conf,Flash_CE);	//(unsigned char)0x60				//芯片擦除; 整片擦除; 也可以用0XC7	
-	
-	SPI_FLASH_DISALBE(SPI_Conf);											//SPI_FLASH_关闭
-	
-  /* Wait the end of Flash writing */
-  SPI_FLASH_WaitForWriteEnd(SPI_Conf);	
+#ifdef SPI_FLASH_OSTL
+	if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus==SPI_FLASH_ERASE)
+	{
+		if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_IDLE)
+		{
+			SPI_FLASH_ENALBE(SPI_Conf);													//SPI_FLASH_使能
+			SPI_Cmd(SPI_Conf->SPIx, ENABLE);										//使能SPI
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);				//0x06使能写命令
+			SPI_FLASH_DISALBE(SPI_Conf);												//SPI_FLASH_关闭
+			
+			SPI_FLASH_ENALBE(SPI_Conf);													//SPI_FLASH_使能		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);				//0x05写入读状态命令 */		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);				//读状态 */			
+			SPI_FLASH_DISALBE(SPI_Conf);												//SPI_FLASH_关闭
+			
+			SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WIP0;			//进入擦除步骤	
+
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_WIP0)
+		{
+			u8 FLASH_Status=0;
+			
+			SPI_FLASH_ENALBE(SPI_Conf);																		//SPI_FLASH_使能
+			SPI_Cmd(SPI_Conf->SPIx, ENABLE);															//使能SPI
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_WREN);									//0x06使能写命令
+			SPI_FLASH_DISALBE(SPI_Conf);																	//SPI_FLASH_关闭
+			
+			SPI_FLASH_ENALBE(SPI_Conf);																		//SPI_FLASH_使能		
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);									//0x05写入读状态命令 */		
+			FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);	//读状态 */			
+			SPI_FLASH_DISALBE(SPI_Conf);																	//SPI_FLASH_关闭
+			
+			if((FLASH_Status&WEL_Flag)==WEL_Flag)		//写允许标志
+			{
+				//写入状态寄存器值---去除写保护
+				SPI_FLASH_ENALBE(SPI_Conf);										//SPI_FLASH_使能
+				SPI_FLASH_WriteReadByte(SPI_Conf,Flash_CE);		//0x60	//芯片擦除; 整片擦除; 也可以用0XC7
+				SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+				
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_ERASE;			//进入擦除步骤				
+			}
+			else		//写未允许
+			{
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_WIP0;				//继续检查写允许标志
+			}
+		}
+		else if(SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps==Step_ERASE)	//检查擦除完成
+		{
+			u8 FLASH_Status = 0;
+
+			SPI_FLASH_ENALBE(SPI_Conf);																			//SPI_FLASH_使能			
+			SPI_FLASH_WriteReadByte(SPI_Conf,Flash_RDSR);										//0x05发送读状态寄存器命令
+			FLASH_Status = SPI_FLASH_WriteReadByte(SPI_Conf,Dummy_Byte);		//读状态值，
+			SPI_FLASH_DISALBE(SPI_Conf);																		//SPI_FLASH_关闭
+			
+			if((FLASH_Status&WIP_Flag)!=WIP_Flag)						//不在写状态，表明擦除完成，退出擦除状态
+			{	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;		//清除FLASH擦除请求	
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Staus=SPI_FLASH_IDLE;			//FLASH回到空闲状态
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;						//继续检查写允许标志				
+			}
+			else		//写未允许
+			{
+				SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_ERASE;				//继续检查写允许标志
+			}
+		}
+	}
+	#else
+		/* Send write enable instruction */
+		SPI_FLASH_WriteEnable(SPI_Conf);							//写允许
+	//	SPI_FLASH_WaitForWriteEnd(SPI_Conf);					//等待FLASH写完成--写允许
+		SPI_FLASH_ENALBE(SPI_Conf);										//SPI_FLASH_使能
+		SPI_FLASH_WriteReadByte(SPI_Conf,Flash_CE);		//(unsigned char)0x60				//芯片擦除; 整片擦除; 也可以用0XC7	
+		SPI_FLASH_DISALBE(SPI_Conf);									//SPI_FLASH_关闭
+		SPI_FLASH_WaitForWriteEnd(SPI_Conf);					//等待擦除完成
+	#endif
 }
 
 

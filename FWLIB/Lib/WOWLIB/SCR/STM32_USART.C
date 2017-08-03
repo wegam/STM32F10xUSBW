@@ -1079,7 +1079,7 @@ u16 USART_DMASend(
 		else
 		{
 			DMA1_Channel4->CNDTR =BufferSize;										//设定待发送缓冲区大小
-			DMA1_Channel4->CMAR =(u32)tx_buffer;							//发送缓冲区	
+			DMA1_Channel4->CMAR =(u32)tx_buffer;								//发送缓冲区	
 			DMA_Cmd(DMA1_Channel4,ENABLE);											//DMA发送开启3
 			return BufferSize;			//如果数据已经传入到DMA，返回Buffer大小
 		}

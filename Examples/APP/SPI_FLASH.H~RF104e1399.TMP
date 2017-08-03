@@ -32,7 +32,7 @@ Page：
 //	SPI_FLASH_ERASE		=	4				//FLASH正在执行擦除工作
 //}SPI_FLASH_PROCESS;
 
-#define 	FlASH_BufferSize				1024			//最小扇区大小 4K
+#define 	FlASH_BufferSize				512			//最小扇区大小 4K
 
 typedef	enum _SPI_FLASH_REQUEST			//请求标志
 {
