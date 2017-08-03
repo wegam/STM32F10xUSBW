@@ -1,15 +1,6 @@
 #ifndef __SPI_FLASH_H
 #define __SPI_FLASH_H
 
-//#include "STM32_USART.H"
-//#include "STM32_TIM.H"
-//#include "STM32_DMA.H"
-//#include "STM32_PWM.H"
-//#include "STM32_GPIO.H"
-//#include "STM32_ADC.H"
-//#include "STM32_DAC.H"
-//#include "STM32_SPI.H"
-
 #include "stm32f10x_type.h"
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_spi.h"
@@ -34,27 +25,62 @@ Chip£º	ÕûÆ¬FLASH
 Page£º
 Àı£º(256-byte per page)(4K-byte per sector/16page per sector)(64K-byte per block/16-sector per block)(8-block per chip)
 ¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª*/
-typedef	enum _SPI_FLASH_PROCESS			//FLASH¹¤×÷¹ı³Ì±êÖ¾
-{
-	SPI_FLASH_WRITE		=	2,			//FLASHÕıÔÚĞ´×´Ì¬
-	SPI_FLASH_READ		=	3,			//FLASHÕıÔÚ¶Á×´Ì¬
-	SPI_FLASH_ERASE		=	4				//FLASHÕıÔÚÖ´ĞĞ²Á³ı¹¤×÷
-}SPI_FLASH_PROCESS;
-typedef	enum _SPI_FLASH_STATUS			//FLASH×´Ì¬±êÖ¾
-{
-	SPI_FLASH_IDLE		=	0,			//FLASH¿ÕÏĞ×´Ì¬£¬¿ÉÒÔ¶ÁĞ´
-	SPI_FLASH_BUSY		=	1,			//FLASHÃ¦×´Ì¬£¬ÕıÔÚÖ´ĞĞ¶ÁĞ´²Ù×÷
-	SPI_FLASH_WEL			=	2,			//¿ÉĞ´±êÖ¾£º¶ÁÈ¡×´Ì¬Îª1±íÊ¾¿ÉÒÔ½øĞĞĞ´²Ù×÷£¬0±íÊ¾²»¿ÉÒÔ½øĞĞĞ´²Ù×÷
-	SPI_FLASH_WIP			=	3,			//Ğ´×´Ì¬£º		¶ÁÈ¡×´Ì¬Îª1±íÊ¾ÕıÔÚÖ´ĞĞĞ´²Ù×÷£¬·ñÔò±íÊ¾Ğ´ÈëÍê³É
-}SPI_FLASH_STATUS;
+//typedef	enum _SPI_FLASH_PROCESS			//FLASH¹¤×÷¹ı³Ì±êÖ¾
+//{
+//	SPI_FLASH_WRITE		=	2,			//FLASHÕıÔÚĞ´×´Ì¬
+//	SPI_FLASH_READ		=	3,			//FLASHÕıÔÚ¶Á×´Ì¬
+//	SPI_FLASH_ERASE		=	4				//FLASHÕıÔÚÖ´ĞĞ²Á³ı¹¤×÷
+//}SPI_FLASH_PROCESS;
+
+#define 	FlASH_BufferSize				512			//×îĞ¡ÉÈÇø´óĞ¡ 4K
+
 typedef	enum _SPI_FLASH_REQUEST			//ÇëÇó±êÖ¾
 {
-	SPI_FLASH_qIDLE		=	0,			//FLASH¿ÕÏĞ×´Ì¬£¬¿ÉÒÔ¶ÁĞ´
-	SPI_FLASH_qBUSY		=	1,			//FLASHÃ¦×´Ì¬£¬ÕıÔÚÖ´ĞĞ¶ÁĞ´²Ù×÷
-	SPI_FLASH_qWRITE	=	2,			//FLASHÕıÔÚĞ´×´Ì¬
-	SPI_FLASH_qREAD		=	3,			//FLASHÕıÔÚ¶Á×´Ì¬
-	SPI_FLASH_qERASE	=	4				//FLASHÕıÔÚÖ´ĞĞ²Á³ı¹¤×÷
+	SPI_FLASH_qIDLE		=	0,			//FLASH¿ÕÏĞ
+	SPI_FLASH_qWRITE	=	1,			//FLASHĞ´ÇëÇó
+	SPI_FLASH_qREAD		=	2,			//FLASH¶ÁÇëÇó
+	SPI_FLASH_qERASE	=	3				//FLASH²Á³ıÇëÇó
 }SPI_FLASH_REQUEST;
+
+typedef enum _SPI_FLASH_STATUS			//FLASH×´Ì¬±êÖ¾
+{
+	SPI_FLASH_IDLE		=	0,			//FLASH¿ÕÏĞ×´Ì¬£¬¿ÉÒÔ¶ÁĞ´
+	SPI_FLASH_BUSY		=	1,			//FLASHÃ¦×´Ì¬
+	SPI_FLASH_WRITE		=	2,			//FLASHÖ´ĞĞĞ´²Ù×÷
+	SPI_FLASH_READ		=	3,			//FLASHÔÚ¶Á²Ù×÷¹ı³Ì
+	SPI_FLASH_ERASE		=	4				//FLASHÕıÔÚÖ´ĞĞ²Á³ı¹¤×÷	
+}SPI_FLASH_STATUS;
+typedef	enum _SPI_FLASH_STEPS			//FLASH×´Ì¬±êÖ¾
+{
+	Step_IDLE			=	0,			//ÆğÊ¼²½Öè£¬µ±Ç°Îª¿ÕÏĞ
+	Step_WIP0			=	1,			//µÈ´ıĞ´²Ù×÷Íê³É£¬Ö»ÓĞĞ´²Ù×÷Íê³Éºó²Å¿ÉÒÔ½øĞĞĞ´»òÕß²Á³ı²Ù×÷
+	Step_WEL			=	2,			//Ğ´Ê¹ÄÜ
+	Step_WRITE		=	3,			//Ğ´×´Ì¬£º		¶ÁÈ¡×´Ì¬Îª1±íÊ¾ÕıÔÚÖ´ĞĞĞ´²Ù×÷£¬·ñÔò±íÊ¾Ğ´ÈëÍê³É
+	Step_WIP1			=	4,			//µÈ´ıĞ´²Ù×÷Íê³É£¬½øĞĞĞ´²Ù×÷»òÕß²Á³ı²Ù×÷ºó£¬ĞèÒªÅĞ¶ÏFLASH×´Ì¬£¬Ğ´ÈëÍê³Éºó¸ù¾İÊÇ·ñ»¹ÓĞ´ıĞ´ÈëÊı¾İ½øĞĞÏàÓ¦µÄ²½ÖèÌø×ª
+	Step_READ			=	5,			//¶Á²Ù×÷²½Öè
+	Step_ERASE		=	6				//²Á³ı²Ù×÷
+}SPI_FLASH_STEPS;
+typedef struct _SPI_FLASH_INF			//FLASH×´Ì¬±êÖ¾
+{
+	unsigned int	SPI_FLASH_PageSize;						//(256-byte per page)
+	unsigned int	SPI_FLASH_SectorSize;					//(4K-byte per sector)
+	unsigned int	SPI_FLASH_BlockSize;					//(64K-byte per block)
+	
+	unsigned int	SPI_FLASH_LenghToWrite;				//´ıĞ´Èë×Ö½Ú³¤¶È
+	unsigned int	SPI_FLASH_LenghToRead;				//´ı¶ÁÈ¡×Ö½Ú³¤¶È
+	
+	unsigned int	SPI_FLASH_WriteAdrr;					//Ğ´ÈëµØÖ·
+	unsigned int	SPI_FLASH_ReadAdrr;						//¶ÁÈ¡µØÖ·
+	
+	unsigned char MISO_Buffer[FlASH_BufferSize];
+	unsigned char MOSI_Buffer[FlASH_BufferSize];
+	
+	unsigned char SPI_FLASH_ReadFlg;						//SPI_FLASH¶ÁÊı±êÖ¾£¬Èç¹ûSPI_FLASH_ReadFlg==1£º¶Áµ½Êı¾İ£¬SPI_FLASH_ReadFlg==0£¬Î´¶Áµ½Êı¾İ
+	
+	SPI_FLASH_STATUS	SPI_FLASH_Staus;					//FLASH×´Ì¬
+	SPI_FLASH_STEPS		SPI_FLASH_Steps;					//FLASHÖ´ĞĞ²½Öè
+	SPI_FLASH_REQUEST	SPI_FLASH_Request;				//FLASH²Ù×÷ÇëÇóÀàĞÍ	
+}SPI_FLASH_INF;
 
 //----SPI¹Ü½ÅÅäÖÃ--------------------------------------------------------------
 typedef struct	_SPI_Flash
@@ -83,14 +109,13 @@ typedef struct	_SPI_Flash
 	
 	unsigned char SPI_Flash_NSS_CsFlg;									//Èç¹ûÊ¹ÓÃ´¿Ó²¼şSPI£¨º¬CS½Å£©£¬	SPI_Flash_NSS_CsFlg=1£¬		·ñÔòSPI_Flash_NSS_CsFlg=0£»´ËÓÉSPI_Flash_ConfigurationNR¸ù¾İSPI¹Ü½ÅÅĞ¶ÏÉèÖÃ´ËÖµ
 	unsigned char SPI_Flash_USER_PotFlg;								//Èç¹ûÊ¹ÓÃÓ²¼şSPI½Ó¿Ú£¬				SPI_Flash_USER_PotFlg=1£¬	·ñÔòSSPI_Flash_USER_PotFlg=0£»´ËÓÉSPI_Flash_ConfigurationNR¸ù¾İSPI¹Ü½ÅÅĞ¶ÏÉèÖÃ´ËÖµ
+	unsigned char SPI_Flash_USER_DMAFlg;								//Èç¹ûÊ¹ÓÃDMA£¬								SPI_Flash_USER_DMAFlg=1£¬	·ñÔòSPI_Flash_USER_DMAFlg=0£»´ËÓÉSPI_FLASH_ConfigurationDMA¸ù¾İSPIÅäÖÃÅĞ¶ÏÉèÖÃ´ËÖµ
 	//------------ÅäÖÃÍê³Éºó¶ÁÈ¡FLASH_IDÈ·ÈÏFLASHĞÍºÅºó×Ô¶¯²¹³äÒÔÏÂÊı¾İ
-	unsigned int	SPI_FLASH_PageSize;						//(256-byte per page)
-	unsigned int	SPI_FLASH_SectorSize;					//(4K-byte per sector)
-	unsigned int	SPI_FLASH_BlockSize;					//(64K-byte per block)
 	
-	SPI_FLASH_PROCESS	SPI_FLASH_Process;				//FLASH¹¤×÷¹ı³Ì±êÖ¾
-	SPI_FLASH_STATUS 	SPI_FLASH_Status;					//FLASH¹¤×÷×´Ì¬±êÖ¾//¸ù¾İFLASHµ±Ç°µÄ×´Ì¬¶ÔFLASH½øĞĞ²Ù×÷
-	SPI_FLASH_REQUEST	SPI_FLASH_Request;				//ÇëÇó±êÖ¾---¸ù¾İÇëÇó±êÖ¾¼ì²âFLASH×´Ì¬£¬
+	//SPI_FLASH×´Ì¬Öµ-----ÓÉÈí¼ş×Ô¶¯ÉèÖÃÄÚ²¿²ÎÊı
+	SPI_FLASH_INF SPI_FLASH_Info;
+	
+
 	
 }SPI_FLASH_TypeDef;
 
@@ -99,9 +124,9 @@ typedef struct	_SPI_Flash
 typedef	enum _SPI_FLASH_CLASS		//FLASH_MX25L4006E
 {
 	ChipSize		=	0x01,
-	SectorSize	=	4*1024,		//ÉÈÇø´óĞ¡4K Byte
-	BlockSize		=	64*1024,	//¿é´óĞ¡64K
-	PageSize		=	256,		//Ò³´óĞ¡256 Byte
+	SectorSize	=	4*1024,						//ÉÈÇø´óĞ¡4K Byte
+	BlockSize		=	64*1024,					//¿é´óĞ¡64K
+	PageSize		=	256,							//Ò³´óĞ¡256 Byte
 	
 	MX25L4006E_PageSize		=	256,		//(256-byte per page)
 	MX25L4006E_SectorSize,					//(4K-byte per sector)
@@ -144,7 +169,8 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf);			//SPI²ÎÊıÉèÖÃ
 
 void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf);			//ÆÕÍ¨SPI½Ó¿ÚÅäÖÃ--Î´¿ªÖĞ¶ÏºÍDMA
 void SPI_FLASH_GetInfo(SPI_FLASH_TypeDef *SPI_Conf);							//»ñÈ¡FLASHĞÅÏ¢---¸ù¾İIDÈ·¶¨FLASHĞÍºÅ£¬ÅäÖÃÒ³´óĞ¡£¬ÉÈÇø´óĞ¡£¬¿é´óĞ¡²ÎÊı
-
+//------------SPI_FLASH_Process
+void SPI_FLASH_Process	(SPI_FLASH_TypeDef *SPI_Conf);			//FLASHÊı¾İ´¦Àí£ºËùÓĞµÄFLASH¶ÔÍâ²Ù×÷½Ó¿Ú
 //------------Êı¾İ¶ÁĞ´º¯Êı
 void SPI_FLASH_PageWrite		(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASHĞ´Ò»Ò³Êı¾İ
 void SPI_FLASH_BufferWrite	(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASHĞ´»º³åÊı¾İ
@@ -162,10 +188,10 @@ void SPI_FLASH_ChipErase		(SPI_FLASH_TypeDef *SPI_Conf);										//FLASHÕûÆ¬²Á³
 void SPI_FLASH_ENALBE		(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_Ê¹ÄÜ
 void SPI_FLASH_DISALBE	(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_¹Ø±Õ
 //------------
-u8 	SPI_FLASH_WriteReadByte(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);			//Flash·¢ËÍÒ»×Ö½Ú²¢¶ÁÈ¡Ò»×Ö½ÚÊı¾İ
+u8 	SPI_FLASH_WriteReadByte	(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);			//Flash·¢ËÍÒ»×Ö½Ú²¢¶ÁÈ¡Ò»×Ö½ÚÊı¾İ
 //------------
-void SPI_FLASH_WriteEnable(SPI_FLASH_TypeDef *SPI_Conf);							//0x06Ğ´Ê¹ÄÜ
-void SPI_FLASH_WriteDisable(SPI_FLASH_TypeDef *SPI_Conf);							//0xĞ´±£»¤--Ğ´½ûÖ¹
+void SPI_FLASH_WriteEnable	(SPI_FLASH_TypeDef *SPI_Conf);							//0x06Ğ´Ê¹ÄÜ
+void SPI_FLASH_WriteDisable	(SPI_FLASH_TypeDef *SPI_Conf);							//0xĞ´±£»¤--Ğ´½ûÖ¹
 void SPI_FLASH_WaitForWriteEnd(SPI_FLASH_TypeDef *SPI_Conf);					//µÈ´ıFLASHĞ´Íê³É
 //------------×´Ì¬º¯Êı
 u8 SPI_FLASH_ReadStatus(SPI_FLASH_TypeDef *SPI_Conf);									//¶ÁFlash×´Ì¬¼Ä´æÆ÷
@@ -182,4 +208,257 @@ u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord);				//·¢ËÍ1
 
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////#ifndef __SPI_FLASH_H
+////#define __SPI_FLASH_H
+
+//////#include "STM32_USART.H"
+//////#include "STM32_TIM.H"
+//////#include "STM32_DMA.H"
+//////#include "STM32_PWM.H"
+//////#include "STM32_GPIO.H"
+//////#include "STM32_ADC.H"
+//////#include "STM32_DAC.H"
+//////#include "STM32_SPI.H"
+
+////#include "stm32f10x_type.h"
+////#include "stm32f10x_gpio.h"
+////#include "stm32f10x_spi.h"
+
+////#include	"stdio.h"				//ÓÃÓÚprintf
+////#include	"string.h"			//ÓÃÓÚprintf
+////#include	"stdarg.h"			//ÓÃÓÚ»ñÈ¡²»È·¶¨¸öÊıµÄ²ÎÊı
+////#include	"stdlib.h"			//malloc¶¯Ì¬ÉêÇëÄÚ´æ¿Õ¼ä
+////	
+////#include	"stddef.h"
+////#include	"stdint.h"
+
+////#include "STM32F10x_BitBand.H"
+
+//////#include "STM32_SYSTICK.H"
+//////#include "STM32_SPI.H"
+
+/////*--------------------------------FLASH²¿·ÖÊõÓï½âÎö-----------------------------
+////Sector£º±ÈBLOCK¸üĞ¡µÄµ¥Î»
+////Block£º	´ó²¿·ÖµÄFLASH¶¼ÒÔ64KÎªµ¥Î»¿Õ¼äERASE
+////Chip£º	ÕûÆ¬FLASH
+////Page£º
+////Àı£º(256-byte per page)(4K-byte per sector/16page per sector)(64K-byte per block/16-sector per block)(8-block per chip)
+////¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª¡ª*/
+////typedef	enum _SPI_FLASH_PROCESS			//FLASH¹¤×÷¹ı³Ì±êÖ¾
+////{
+////	SPI_FLASH_WRITE		=	2,			//FLASHÕıÔÚĞ´×´Ì¬
+////	SPI_FLASH_READ		=	3,			//FLASHÕıÔÚ¶Á×´Ì¬
+////	SPI_FLASH_ERASE		=	4				//FLASHÕıÔÚÖ´ĞĞ²Á³ı¹¤×÷
+////}SPI_FLASH_PROCESS;
+////typedef	enum _SPI_FLASH_STATUS			//FLASH×´Ì¬±êÖ¾
+////{
+////	SPI_FLASH_IDLE		=	0,			//FLASH¿ÕÏĞ×´Ì¬£¬¿ÉÒÔ¶ÁĞ´
+////	SPI_FLASH_BUSY		=	1,			//FLASHÃ¦×´Ì¬£¬ÕıÔÚÖ´ĞĞ¶ÁĞ´²Ù×÷
+////	SPI_FLASH_WEL			=	2,			//¿ÉĞ´±êÖ¾£º¶ÁÈ¡×´Ì¬Îª1±íÊ¾¿ÉÒÔ½øĞĞĞ´²Ù×÷£¬0±íÊ¾²»¿ÉÒÔ½øĞĞĞ´²Ù×÷
+////	SPI_FLASH_WIP			=	3,			//Ğ´×´Ì¬£º		¶ÁÈ¡×´Ì¬Îª1±íÊ¾ÕıÔÚÖ´ĞĞĞ´²Ù×÷£¬·ñÔò±íÊ¾Ğ´ÈëÍê³É
+////}SPI_FLASH_STATUS;
+////typedef	enum _SPI_FLASH_REQUEST			//ÇëÇó±êÖ¾
+////{
+////	SPI_FLASH_qIDLE		=	0,			//FLASH¿ÕÏĞ×´Ì¬£¬¿ÉÒÔ¶ÁĞ´
+////	SPI_FLASH_qBUSY		=	1,			//FLASHÃ¦×´Ì¬£¬ÕıÔÚÖ´ĞĞ¶ÁĞ´²Ù×÷
+////	SPI_FLASH_qWRITED	=	2,			//FLASH¼ì²éÊÇ·ñĞ´Íê³É/ÊÇ·ñÔÚĞ´×´Ì¬£¨ÔÚĞ´»òÕß²Á³ı²Ù×÷ºó£¬ĞèÒª¼ì²éFLASHÊÇ·ñÍê³ÉĞ´²Ù×÷»òÕßÔÚÆäËü²Ù×÷Ç°ĞèÒª¼ì²éFLASHÊÇ·ñÕıÔÚ½øĞĞĞ´²Ù×÷£©
+////	SPI_FLASH_qWRITEN	=	3				//FLASH¼ì²éÊÇ·ñ¿ÉÒÔ½øĞĞĞ´²Ù×÷
+////}SPI_FLASH_REQUEST;
+
+//////----SPI¹Ü½ÅÅäÖÃ--------------------------------------------------------------
+////typedef struct	_SPI_Flash
+////{
+////	//____________¶Ë¿Ú¶¨Òå
+////	SPI_TypeDef *			SPIx;				//SPI½Ó¿ÚÅäÖÃ x=0¡¢1¡¢2¡¢3¡¢
+
+////	//____________SPI_CS¶¨Òå
+////	GPIO_TypeDef* 	SPI_CS_PORT;		//GPIOX
+////	unsigned short 	SPI_CS_PIN;			//GPIO_Pin_x
+
+////	//____________SPI_CLK¶¨Òå
+////	GPIO_TypeDef* 	SPI_CLK_PORT;		//GPIOX
+////	unsigned short 	SPI_CLK_PIN;		//GPIO_Pin_x
+
+////	//____________SPI_MISO¶¨Òå
+////	GPIO_TypeDef* 	SPI_MISO_PORT;	//GPIOX
+////	unsigned short 	SPI_MISO_PIN;		//GPIO_Pin_x
+
+////	//____________SPI_MOSI¶¨Òå
+////	GPIO_TypeDef* 	SPI_MOSI_PORT;	//GPIOX
+////	unsigned short 	SPI_MOSI_PIN;		//GPIO_Pin_x
+////	
+////	//____________SPI_²¨ÌØÂÊ
+////	unsigned short 	SPI_BaudRatePrescaler_x;		//x=2/4/8/16/32/64/128/256
+////	
+////	unsigned char SPI_Flash_NSS_CsFlg;									//Èç¹ûÊ¹ÓÃ´¿Ó²¼şSPI£¨º¬CS½Å£©£¬	SPI_Flash_NSS_CsFlg=1£¬		·ñÔòSPI_Flash_NSS_CsFlg=0£»´ËÓÉSPI_Flash_ConfigurationNR¸ù¾İSPI¹Ü½ÅÅĞ¶ÏÉèÖÃ´ËÖµ
+////	unsigned char SPI_Flash_USER_PotFlg;								//Èç¹ûÊ¹ÓÃÓ²¼şSPI½Ó¿Ú£¬				SPI_Flash_USER_PotFlg=1£¬	·ñÔòSSPI_Flash_USER_PotFlg=0£»´ËÓÉSPI_Flash_ConfigurationNR¸ù¾İSPI¹Ü½ÅÅĞ¶ÏÉèÖÃ´ËÖµ
+////	//------------ÅäÖÃÍê³Éºó¶ÁÈ¡FLASH_IDÈ·ÈÏFLASHĞÍºÅºó×Ô¶¯²¹³äÒÔÏÂÊı¾İ
+////	unsigned int	SPI_FLASH_PageSize;						//(256-byte per page)
+////	unsigned int	SPI_FLASH_SectorSize;					//(4K-byte per sector)
+////	unsigned int	SPI_FLASH_BlockSize;					//(64K-byte per block)
+////	
+////	SPI_FLASH_PROCESS	SPI_FLASH_Process;				//FLASH¹¤×÷¹ı³Ì±êÖ¾
+////	SPI_FLASH_STATUS 	SPI_FLASH_Status;					//FLASH¹¤×÷×´Ì¬±êÖ¾//¸ù¾İFLASHµ±Ç°µÄ×´Ì¬¶ÔFLASH½øĞĞ²Ù×÷
+////	SPI_FLASH_REQUEST	SPI_FLASH_Request;				//ÇëÇó±êÖ¾---¸ù¾İÇëÇó±êÖ¾¼ì²âFLASH×´Ì¬£¬
+////	
+////}SPI_FLASH_TypeDef;
+
+////	
+
+////typedef	enum _SPI_FLASH_CLASS		//FLASH_MX25L4006E
+////{
+////	ChipSize		=	0x01,
+////	SectorSize	=	4*1024,		//ÉÈÇø´óĞ¡4K Byte
+////	BlockSize		=	64*1024,	//¿é´óĞ¡64K
+////	PageSize		=	256,		//Ò³´óĞ¡256 Byte
+////	
+////	MX25L4006E_PageSize		=	256,		//(256-byte per page)
+////	MX25L4006E_SectorSize,					//(4K-byte per sector)
+////	MX25L4006E_BlockSize,						//(64K-byte per block)
+////	
+////	
+////	sat
+////}SPI_FLASH_CLASS;		
+
+/////******************************FlashÃüÁî¶¨Òå²Î¿¼MX25L4006E*******************************/
+////#define	Flash_WREN		(unsigned char)0x06				//Ğ´Ê¹ÄÜ
+////#define	Flash_WRDI		(unsigned char)0x04				//Ğ´Ê§ÄÜ
+////#define	Flash_WRSR		(unsigned char)0x01				//Ğ´×´Ì¬¼Ä´æÆ÷
+////#define	Flash_RDID		(unsigned char)0x9F				//¶ÁÉè±¸ĞÅÏ¢£¬3byte£»µÚÒ»×Ö½ÚÎªÖÆÔìÉÌ´úÂë£¬µÚ¶şµÚÈı×Ö½ÚÎªĞ¾Æ¬´úÂë
+////#define	Flash_RDSR		(unsigned char)0x05				//¶Á×´Ì¬¼Ä´æÆ÷
+////#define	Flash_READ		(unsigned char)0x03				//¶ÁÊı¾İ
+////#define	Flash_FREAD		(unsigned char)0x0B				//¿ìËÙ¶ÁÈ¡Êı¾İ
+////#define	Flash_RDSFDP	(unsigned char)0x5A				//
+////#define	Flash_RES			(unsigned char)0xAB				//¶ÁÆ÷¼şµØÖ·
+////#define	Flash_REMS		(unsigned char)0x90				//¶ÁÖÆÔìÉÌ´úÂëºÍ²úÆ·´úÂë
+////#define	Flash_DREAD		(unsigned char)0x3B				//
+////#define	Flash_SE			(unsigned char)0x20				//ÉÈÇø²Á³ı
+////#define	Flash_BE			(unsigned char)0x52				//¿é²Á³ı		Ò²¿ÉÒÔÓÃ0XD8
+////#define	Flash_CE			(unsigned char)0x60				//Ğ¾Æ¬²Á³ı; ÕûÆ¬²Á³ı; Ò²¿ÉÒÔÓÃ0XC7
+////#define	Flash_WPAGE		(unsigned char)0x02				//Ğ´Ò³Ãæ
+////#define	Flash_DP			(unsigned char)0xB9				//Éî¶ÈÊ¡µç×´Ì¬
+////#define	Flash_RDP			(unsigned char)0xAB				//ÍË³öÉî¶Èµôµç
+////	
+//////±êÖ¾Î»
+////#define	WIP_Flag			(unsigned char)1<<0				//Write In Progress (WIP) flag
+////#define	WEL_Flag			(unsigned char)1<<1				//write enable latch (WEL) flag
+////	
+
+////void SPI_FLASH_Configuration(void);
+////void SPI_FLASH_Server(void);
+
+//////------------ÅäÖÃº¯Êı
+////void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf);			//SPI²ÎÊıÉèÖÃ
+//////---------------------------------------------------------------------------------
+
+////void SPI_FLASH_ConfigurationNR(SPI_FLASH_TypeDef *SPI_Conf);			//ÆÕÍ¨SPI½Ó¿ÚÅäÖÃ--Î´¿ªÖĞ¶ÏºÍDMA
+////void SPI_FLASH_GetInfo(SPI_FLASH_TypeDef *SPI_Conf);							//»ñÈ¡FLASHĞÅÏ¢---¸ù¾İIDÈ·¶¨FLASHĞÍºÅ£¬ÅäÖÃÒ³´óĞ¡£¬ÉÈÇø´óĞ¡£¬¿é´óĞ¡²ÎÊı
+
+//////------------Êı¾İ¶ÁĞ´º¯Êı
+////void SPI_FLASH_PageWrite		(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASHĞ´Ò»Ò³Êı¾İ
+////void SPI_FLASH_BufferWrite	(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 WriteAddr, u16 NumByteToWrite);		//FLASHĞ´»º³åÊı¾İ
+////void SPI_FLASH_BufferRead		(SPI_FLASH_TypeDef *SPI_Conf,u8* pBuffer, u32 ReadAddr, u16 NumByteToRead);			//SPI¶Á»º³åÇø
+
+//////------------²Á³ıº¯Êı
+////void SPI_FLASH_SectorErase	(SPI_FLASH_TypeDef *SPI_Conf,u32 SectorAddr);			//FlashÉÈÇø²Á³ıFast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
+////void SPI_FLASH_BulkErase		(SPI_FLASH_TypeDef *SPI_Conf);										//Flash¿é²Á³ıFast erase time: 60ms(typ.)/sector (4K-byte per sector) ; 0.7s(typ.)/block (64K-byte per block)
+////void SPI_FLASH_ChipErase		(SPI_FLASH_TypeDef *SPI_Conf);										//FLASHÕûÆ¬²Á³ı
+
+
+//////************************************ÒÔÏÂÎªÄÚ²¿µ÷ÓÃº¯Êı
+
+//////------------¿ØÖÆº¯Êı
+////void SPI_FLASH_ENALBE		(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_Ê¹ÄÜ
+////void SPI_FLASH_DISALBE	(SPI_FLASH_TypeDef 	*SPI_Conf);								//SPI_FLASH_¹Ø±Õ
+//////------------
+////u8 	SPI_FLASH_WriteReadByte(SPI_FLASH_TypeDef *SPI_Conf,u8 byte);			//Flash·¢ËÍÒ»×Ö½Ú²¢¶ÁÈ¡Ò»×Ö½ÚÊı¾İ
+//////------------
+////void SPI_FLASH_WriteEnable(SPI_FLASH_TypeDef *SPI_Conf);							//0x06Ğ´Ê¹ÄÜ
+////void SPI_FLASH_WriteDisable(SPI_FLASH_TypeDef *SPI_Conf);							//0xĞ´±£»¤--Ğ´½ûÖ¹
+////void SPI_FLASH_WaitForWriteEnd(SPI_FLASH_TypeDef *SPI_Conf);					//µÈ´ıFLASHĞ´Íê³É
+//////------------×´Ì¬º¯Êı
+////u8 SPI_FLASH_ReadStatus(SPI_FLASH_TypeDef *SPI_Conf);									//¶ÁFlash×´Ì¬¼Ä´æÆ÷
+////void SPI_FLASH_WriteStatus(SPI_FLASH_TypeDef *SPI_Conf,u8 Status);		//Ğ´Flash×´Ì¬¼Ä´æÆ÷
+//////------------
+////u32 SPI_FLASH_ReadID(SPI_FLASH_TypeDef *SPI_Conf);										//¶ÁFlashID
+
+
+//////------------ÆäËü--ÔİÎ´µ÷ÊÔ
+////void SPI_FLASH_StartReadSequence(SPI_FLASH_TypeDef *SPI_Conf,u32 ReadAddr);	//¿ªÊ¼¶ÁÊı¾İ
+////u16 SPI_FLASH_SendHalfWord(SPI_FLASH_TypeDef *SPI_Conf,u16 HalfWord);				//·¢ËÍ16Î»Êı¾İ
+//////----------------------------------------------------------------------
+//////void SPI_FLASH_WriteCommand(SPI_FLASH_TypeDef *SPI_Conf,u8 Flash_Command);				//Ğ´ÃüÁî
+
+
+////#endif
 
