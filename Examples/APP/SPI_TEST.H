@@ -4,11 +4,11 @@
 //#include "STM32_USART.H"
 //#include "STM32_TIM.H"
 //#include "STM32_DMA.H"
-#include "STM32_PWM.H"
+//#include "STM32_PWM.H"
 //#include "STM32_GPIO.H"
 //#include "STM32_ADC.H"
 //#include "STM32_DAC.H"
-#include "STM32_SPI.H"
+//#include "STM32_SPI.H"
 
 
 //typedef enum {DISABLE1 = 2, ENABLE1 = 3} FunctionalState1;
@@ -19,7 +19,7 @@
 
 void SPI_TEST_Configuration(void);
 void SPI_TEST_Server(void);
-void SPI_StructConf(SPI_InitTypeDef* SPI_InitStruct);
+
 
 
 

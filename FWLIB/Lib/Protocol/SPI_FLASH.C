@@ -16,8 +16,10 @@ Chip：	整片FLASH
 Page：
 例：(256-byte per page)(4K-byte per sector/16page per sector)(64K-byte per block/16-sector per block)(8-block per chip)
 *******************************************************************************/
-#ifdef SPI_FLASH							//如果定义了SPI_FLASH 此功能生效
+
 #include "SPI_FLASH.H"
+
+#include "USART_ISP.H"
 
 #define USB_TEST_BD				//USB_TEST板
 //#define SPI_FLASH_OSTL
@@ -31,9 +33,7 @@ Page：
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 #include "stm32f10x_dma.h"
-//#include "stm32f10x_nvic.h"
 
-//#include "STM32_WOW.H"
 #include "STM32_PWM.H"
 #include "STM32_SYS.H"
 #include "STM32_SPI.H"
@@ -41,36 +41,38 @@ Page：
 #include "STM32_SYSTICK.H"
 #include "STM32_USART.H"
 
-#define 	Dummy_Byte 0xA5					//FLASH空操作数
+//#define 	Dummy_Byte 0xA5					//FLASH空操作数
 //#define		SPI_FLASH_PageSize   		0x100		//Flash页大小
-#define		FLASH_WriteAddress     	0x00
-#define		FLASH_ReadAddress      	FLASH_WriteAddress
-#define		FLASH_SectorToErase    	FLASH_WriteAddress
+//#define		FLASH_WriteAddress     	0x00
+//#define		FLASH_ReadAddress      	FLASH_WriteAddress
+//#define		FLASH_SectorToErase    	FLASH_WriteAddress
 //#define 	FlASH_BufferSize				512
-#define 	USART_BufferSize				FlASH_BufferSize
+//#define 	USART_BufferSize				FlASH_BufferSize
 
 
-u32 Temp = 0;
-SPI_FLASH_TypeDef	FLASH_Conf;
+//u32 Temp = 0;
+//SPI_FLASH_TypeDef	FLASH_Conf;
 
-u16	FLASH_ChipEraseFlag=0;			//启动后擦除一次FLASH
-u16	RWF=0;			//读写标志位
+//ISP_Conf_TypeDef 	ISP_Conf;
 
-u32 FlashAddr=0;
-u32 FlashID=0;
-u8 FlashStatus=WEL_Flag;
-u8 RevBuffer[FlASH_BufferSize]={0};
-//u8 SendBuffer[FlASH_BufferSize]={0x9F,0xFF,0XFF,0XFF};
-//u8 testSbuffer[FlASH_BufferSize]={0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfA};
-u8 testRbuffer[FlASH_BufferSize]={0};
+//u16	FLASH_ChipEraseFlag=0;			//启动后擦除一次FLASH
+//u16	RWF=0;			//读写标志位
 
-u8 *testSbuffer=FLASH_Conf.SPI_FLASH_Info.MOSI_Buffer;
+//u32 FlashAddr=0;
+//u32 FlashID=0;
+//u8 FlashStatus=WEL_Flag;
+//u8 RevBuffer[FlASH_BufferSize]={0};
+////u8 SendBuffer[FlASH_BufferSize]={0x9F,0xFF,0XFF,0XFF};
+////u8 testSbuffer[FlASH_BufferSize]={0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfA};
+//u8 testRbuffer[FlASH_BufferSize]={0};
 
-u8 RxdBuffe[USART_BufferSize]={0};
-u8 RevBuffe[USART_BufferSize]={0};
+//u8 *testSbuffer=FLASH_Conf.SPI_FLASH_Info.MOSI_Buffer;
 
-u8 TxdBuffe[USART_BufferSize]={0};
-u8 TevBuffe[USART_BufferSize]={0};
+//u8 RxdBuffe[USART_BufferSize]={0};
+//u8 RevBuffe[USART_BufferSize]={0};
+
+//u8 TxdBuffe[USART_BufferSize]={0};
+//u8 TevBuffe[USART_BufferSize]={0};
 
 /*******************************************************************************
 * 函数名		:	
@@ -79,19 +81,21 @@ u8 TevBuffe[USART_BufferSize]={0};
 * 输出		:
 * 返回 		:
 *******************************************************************************/
-void SPI_FLASH_Configuration(void)
-{
-	SYS_Configuration();											//系统配置 STM32_SYS.H	
-	GPIO_DeInitAll();																							//将所有的GPIO关闭----V20170605
-	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);			//PWM设定-20161127版本
-	
-	USART_DMA_ConfigurationNR	(USART1,115200,(u32*)RxdBuffe,USART_BufferSize);	//USART_DMA配置--查询方式，不开中断
-	
-	SPI_FLASH_Conf(&FLASH_Conf);			//SPI设置
-
-	FlashStatus=WEL_Flag;	
-	SysTick_Configuration(50);							//系统嘀嗒时钟配置72MHz,单位为uS
-}
+//void SPI_FLASH_Configuration(void)
+//{
+//	SYS_Configuration();											//系统配置 STM32_SYS.H	
+//	GPIO_DeInitAll();													//将所有的GPIO关闭----V20170605
+//	PWM_OUT(TIM2,PWM_OUTChannel1,1,900);			//PWM设定-20161127版本
+//	
+//	USART_DMA_ConfigurationNR	(USART1,115200,(u32*)RxdBuffe,USART_BufferSize);	//USART_DMA配置--查询方式，不开中断
+//	
+//	SPI_FLASH_Conf(&FLASH_Conf);			//SPI设置
+//	
+//	ISP_Conf.USARTx=USART1;
+//	
+//	FlashStatus=WEL_Flag;	
+//	SysTick_Configuration(50);							//系统嘀嗒时钟配置72MHz,单位为uS
+//}
 
 /*******************************************************************************
 * 函数名		:
@@ -100,102 +104,104 @@ void SPI_FLASH_Configuration(void)
 * 输出		:
 * 返回 		:
 *******************************************************************************/
-void SPI_FLASH_Server(void)
-{
-	u16 RxNum=0;
-	u32 Addr=0;
-//	SPI_FLASH_Process(&FLASH_Conf);			//FLASH数据处理：所有的FLASH对外操作接口
+//void SPI_FLASH_Server(void)
+//{
+//	u16 RxNum=0;
+//	u32 Addr=0;
+////	SPI_FLASH_Process(&FLASH_Conf);			//FLASH数据处理：所有的FLASH对外操作接口
 
-	RxNum=USART_ReadBufferIDLE			(USART1,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
-	
-	if(RxNum&&(FlashAddr<128*4*1024))
-	{		
-		SPI_FLASH_BufferWrite(&FLASH_Conf,	RevBuffe, 		FlashAddr, RxNum);	//FLASH写缓冲数据
-		SPI_FLASH_BufferRead(&FLASH_Conf,		testSbuffer,  FlashAddr, RxNum);
-		FlashAddr+=RxNum;
-	}
-//	itoa(1234567890,TxdBuffe,10);//搜索10代表十进制
-//	SPI_FLASH_Process(&FLASH_Conf);			//FLASH数据处理：所有的FLASH对外操作接口
-	if(Temp!=0)
-	{
-		Temp=0;
+//	RxNum=USART_ReadBufferIDLE			(USART1,(u32*)RevBuffe,(u32*)RxdBuffe);	//串口空闲模式读串口接收缓冲区，如果有数据，将数据拷贝到RevBuffer,并返回接收到的数据个数，然后重新将接收缓冲区地址指向RxdBuffer
+////	Usart_ISP_CommandSend(&ISP_Conf,ISP_COMMAND_Get);	//串口编程发送命令程序
+//	if(RxNum&&(FlashAddr<128*4*1024))
+//	{		
+////		SPI_FLASH_BufferWrite(&FLASH_Conf,	RevBuffe, 		FlashAddr, RxNum);	//FLASH写缓冲数据
+////		SPI_FLASH_BufferRead(&FLASH_Conf,		testSbuffer,  FlashAddr, RxNum);
+//		FlashAddr+=RxNum;
+//	}
+////	itoa(1234567890,TxdBuffe,10);//搜索10代表十进制
+////	SPI_FLASH_Process(&FLASH_Conf);			//FLASH数据处理：所有的FLASH对外操作接口
+//	if(Temp!=0)
+//	{
+//		Temp=0;
 
-	}
-	else
-	{
-		Temp=1;
+//	}
+//	else
+//	{
+//		Temp=1;
 
-	}
-	
-	if(FLASH_ChipEraseFlag<=3000)
-	{
-		FLASH_ChipEraseFlag++;
-		if(FLASH_ChipEraseFlag==3000)
-		{
-//			memset(testSbuffer,0xFF, FlASH_BufferSize);
-//			SPI_FLASH_BufferWrite(&FLASH_Conf,	testSbuffer, 		0x00, FlASH_BufferSize);	//FLASH写缓冲数据
-			
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;		//请求整片擦除
-//			SPI_FLASH_ChipErase(&FLASH_Conf);																	//FLASH整片擦除
-			
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qSERASE;		//请求整片擦除
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_SectorAdrr=0;
-			
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qBERASE;		//请求整片擦除
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_BlockAdrr=0;
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qREAD;
-//			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_LenghToRead=FlASH_BufferSize;
-
-//			SPI_FLASH_ChipErase(&FLASH_Conf);												//FLASH整片擦除
-			
-//			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
-//			{
-//				SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
-//				Addr+=FlASH_BufferSize;
-//			}
-			
-//			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
-//			{
-//				SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, Addr, FlASH_BufferSize);
-//				Addr+=FlASH_BufferSize;
-//			}
-			
-		
-//		SPI_FLASH_BulkErase(&FLASH_Conf);										//FLASH整片擦除
-//		SPI_FLASH_ChipErase(&FLASH_Conf);										//FLASH整片擦除
-//		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_ReadAddress);	//Flash扇区擦除
-			
-//			SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);	//FLASH写缓冲数据
-//			SPI_FLASH_BufferRead(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);
-		}
-	}
-	RWF++;
-	if(RWF==2000)
-	{
-//		FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qREAD;
-//		FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_LenghToRead=FlASH_BufferSize;
-//		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_SectorToErase);			//擦除扇区
-//		SPI_FLASH_BulkErase(&FLASH_Conf);										//FLASH块擦除
-//		SPI_FLASH_ChipErase(&FLASH_Conf);										//FLASH整片擦除
-
-//		SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);	//FLASH写缓冲数据
-		
-		
-	}
-	else if(RWF==3000)
-	{
-		RWF=0; 
-//		SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, FLASH_ReadAddress, FlASH_BufferSize);
-		
-//		for(Addr=0;Addr<128*4*1024;)
+//	}
+//	
+//	if(FLASH_ChipEraseFlag<=3000)
+//	{
+//		FLASH_ChipEraseFlag++;
+//		if(FLASH_ChipEraseFlag==3000)
 //		{
-//			SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
-//			Addr+=512;
-//		}
+////			memset(testSbuffer,0xFF, FlASH_BufferSize);
+////			SPI_FLASH_BufferWrite(&FLASH_Conf,	testSbuffer, 		0x00, FlASH_BufferSize);	//FLASH写缓冲数据
+//			
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qCERASE;		//请求整片擦除
+////			SPI_FLASH_ChipErase(&FLASH_Conf);																	//FLASH整片擦除
+//			
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qSERASE;		//请求整片擦除
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_SectorAdrr=0;
+//			
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qBERASE;		//请求整片擦除
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_BlockAdrr=0;
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qREAD;
+////			FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_LenghToRead=FlASH_BufferSize;
 
-		
-	}
-}
+////			SPI_FLASH_ChipErase(&FLASH_Conf);												//FLASH整片擦除
+//			
+////			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
+////			{
+////				SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
+////				Addr+=FlASH_BufferSize;
+////			}
+//			
+////			for(Addr=0;Addr<128*4*1024;)	//524288			//523776
+////			{
+////				SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, Addr, FlASH_BufferSize);
+////				Addr+=FlASH_BufferSize;
+////			}
+//			
+//		
+////		SPI_FLASH_BulkErase(&FLASH_Conf);										//FLASH整片擦除
+////		SPI_FLASH_ChipErase(&FLASH_Conf);										//FLASH整片擦除
+////		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_ReadAddress);	//Flash扇区擦除
+//			
+////			SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);	//FLASH写缓冲数据
+////			SPI_FLASH_BufferRead(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);
+//		}
+//	}
+//	RWF++;
+//	if(RWF==2000)
+//	{
+////		Usart_ISP_CommandSend(&ISP_Conf,ISP_COMMAND_Get);	//串口编程发送命令程序
+//		Usart_ISP_CommandSend(&ISP_Conf,ISP_COMMAND_Go);	//串口编程发送命令程序
+////		FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qREAD;
+////		FLASH_Conf.SPI_FLASH_Info.SPI_FLASH_LenghToRead=FlASH_BufferSize;
+////		SPI_FLASH_SectorErase(&FLASH_Conf,FLASH_SectorToErase);			//擦除扇区
+////		SPI_FLASH_BulkErase(&FLASH_Conf);										//FLASH块擦除
+////		SPI_FLASH_ChipErase(&FLASH_Conf);										//FLASH整片擦除
+
+////		SPI_FLASH_BufferWrite(&FLASH_Conf,testSbuffer, FLASH_WriteAddress, FlASH_BufferSize);	//FLASH写缓冲数据
+//		
+//		
+//	}
+//	else if(RWF==3000)
+//	{
+//		RWF=0; 
+////		SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, FLASH_ReadAddress, FlASH_BufferSize);
+//		
+////		for(Addr=0;Addr<128*4*1024;)
+////		{
+////			SPI_FLASH_BufferRead(&FLASH_Conf,testRbuffer, Addr, FlASH_BufferSize);
+////			Addr+=512;
+////		}
+
+//		
+//	}
+//}
 /*******************************************************************************
 *函数名			:	function
 *功能描述		:	函数功能说明
@@ -210,9 +216,9 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_Conf->SPIx=SPI2;
 	SPI_Conf->SPI_CS_PORT=GPIOC;
 	SPI_Conf->SPI_CS_PIN=GPIO_Pin_8;	
-	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_2;
+	SPI_Conf->SPI_BaudRatePrescaler_x=SPI_BaudRatePrescaler_64;
 	
-	#else
+	#elif	CMSIS_CDC_BD
 	
 	SPI_Conf->SPIx=SPI1;
 	SPI_Conf->SPI_CS_PORT=GPIOA;
@@ -229,6 +235,8 @@ void SPI_FLASH_Conf(SPI_FLASH_TypeDef *SPI_Conf)
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Steps=Step_IDLE;						//初始步骤为空闲步骤
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_Request=SPI_FLASH_qIDLE;		//初始待写入数据为0
 	SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite=0;						//初始待写入数据为0
+	
+	
 	
 }
 /*******************************************************************************
@@ -3232,4 +3240,4 @@ void SPI_FLASH_ChipErase(SPI_FLASH_TypeDef *SPI_Conf)
 
 
 
-#endif
+

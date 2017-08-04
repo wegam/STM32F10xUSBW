@@ -57,9 +57,9 @@
 #ifdef SPI_TEST
 	#include "SPI_TEST.H"
 #endif
-//***********************************SPI_FLASH***********************************//
-#ifdef SPI_FLASH
-#include "SPI_FLASH.H"
+//***********************************OFFLINE_ISP***********************************//
+#ifdef OFFLINE_ISP
+#include "OFFLINE_ISP.H"
 #endif
 //***********************************ADC_TEST***********************************//
 //#ifdef MS0800_WOW

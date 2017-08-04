@@ -82,8 +82,8 @@ void WOW_Configuration(void)
 	SPI_TEST_Configuration();
 #endif
 //***********************************SPI_FLASH***********************************//
-#ifdef SPI_FLASH
-	SPI_FLASH_Configuration();
+#ifdef OFFLINE_ISP
+	OFFLINE_ISP_Configuration();
 #endif
 
 ////***********************************ADC_TEST***********************************//
@@ -319,9 +319,9 @@ void WOW_Server(void)
 #ifdef SPI_TEST	
 	SPI_TEST_Server();
 #endif
-//***********************************SPI_FLASH***********************************//
-#ifdef SPI_FLASH
-	SPI_FLASH_Server();
+//***********************************OFFLINE_ISP***********************************//
+#ifdef OFFLINE_ISP
+	OFFLINE_ISP_Server();
 #endif
 //***********************************ADC_TEST***********************************//
 //#ifdef MS0800_WOW	
