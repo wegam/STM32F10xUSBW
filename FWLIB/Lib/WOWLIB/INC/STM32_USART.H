@@ -43,6 +43,8 @@ typedef struct
 //---------------------------串口
 //*****************USART_DMA初始化
 void 					USART_DMA_ConfigurationNR	(USART_TypeDef* USARTx,u32 USART_BaudRate,u32 *RxdBuffer,u32 BufferSize);	//USART_DMA配置--查询方式，不开中断
+void 					USART_DMA_ConfigurationEV	(USART_TypeDef* USARTx,u32 USART_BaudRate,u32 *RxdBuffer,u32 BufferSize);	//USART_DMA配置--查询方式，不开中断--偶校验
+void 					USART_DMA_ConfigurationOD	(USART_TypeDef* USARTx,u32 USART_BaudRate,u32 *RxdBuffer,u32 BufferSize);	//USART_DMA配置--查询方式，不开中断--奇校验
 void 					USART_DMA_ConfigurationIT	(USART_TypeDef* USARTx,u32 USART_BaudRate,u8 NVICPreemptionPriority,u8 NVIC_SubPriority,u32 *RxdBuffer,u32 BufferSize);	//USART_DMA配置--中断方式
 void 					USART_DMA_Configuration		(USART_TypeDef* USARTx,u32 USART_BaudRate,u8 NVICPreemptionPriority,u8 NVIC_SubPriority,u32 *RxdBuffer,u32 *TxdBuffer,u32 BufferSize);	//USART_DMA配置---旧
 

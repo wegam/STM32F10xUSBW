@@ -65,7 +65,7 @@ void OFFLINE_ISP_Configuration(void)
 	OFFLINE_ISP_Conf();
 	
 	IWDG_Configuration(100);					//独立看门狗配置---参数单位ms	
-	SysTick_Configuration(50);							//系统嘀嗒时钟配置72MHz,单位为uS
+	SysTick_Configuration(50);				//系统嘀嗒时钟配置72MHz,单位为uS
 }
 /*******************************************************************************
 * 函数名		:
@@ -90,6 +90,8 @@ void OFFLINE_ISP_Server(void)
 	}
 	Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
 	SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
+
+	
 }
 /*******************************************************************************
 * 函数名		:
