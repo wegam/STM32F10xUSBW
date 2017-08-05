@@ -137,6 +137,7 @@ typedef	struct _ISP_DATA				//ISP数据存储区域
 	
 	unsigned int OffsetAddr		;		//写从机时的地址偏移
 	unsigned int StartAddr		;		//起始地址
+	unsigned int GoAddr		;		//起始地址
 	
 	unsigned int ReadAddr			;		//读数据起始地址
 	unsigned int ReadLen			;		//需要读取的长度
@@ -189,6 +190,8 @@ void Usart_ISP_ReadMemory(ISP_Conf_TypeDef *ISP_Conf);			//ISP读数据（从机->主机
 void Usart_ISP_WriteMemory(ISP_Conf_TypeDef *ISP_Conf);			//ISP写数据（主机->从机）写数据时，传完地址后等待传入数据，再执行写操作
 void Usart_ISP_SendBuffer(ISP_Conf_TypeDef *ISP_Conf);			//ISP上传数据（从机->主机)
 void Usart_ISP_Erase(ISP_Conf_TypeDef *ISP_Conf);						//ISP擦除操作，接收到擦除命令后，应答，等待输入待擦除地址（全部擦除或者页擦除）等待擦除完成，完成后应答
+u8 Usart_ISP_GetSlaveStatus(ISP_Conf_TypeDef *ISP_Conf);	//返回从机状态值
+void Usart_ISP_SetSlaveStatus(ISP_Conf_TypeDef *ISP_Conf,ISP_SLAVE_STATUS_TypeDef Status);	//设置从机状态
 void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf);						//重置编程器---恢复所有参数为默认值
 	
 #endif
