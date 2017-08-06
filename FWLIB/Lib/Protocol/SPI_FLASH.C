@@ -1141,6 +1141,7 @@ void SPI_FLASH_Process(SPI_FLASH_TypeDef *SPI_Conf)			//FLASH数据处理：所有的FLA
 	{
 		SPI_FLASH_BufferWrite(SPI_Conf,SPI_Conf->SPI_FLASH_Info.MOSI_Buffer, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_WriteAdrr, SPI_Conf->SPI_FLASH_Info.SPI_FLASH_LenghToWrite);	//FLASH写缓冲数据
 	}
+	
 }
 /*******************************************************************************
 *函数名			:	function

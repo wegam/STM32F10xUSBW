@@ -35,4 +35,6 @@ typedef enum
 } PWM_OUTChannelTypeDef;
 
 void PWM_OUT(TIM_TypeDef* TIMx,PWM_OUTChannelTypeDef PWM_OUTChanneln,double PWM_Frequency ,u16 PWM_Ratio);	//PWM设定-20161127版本
+void PWM_OUT2(TIM_TypeDef* TIMx,PWM_OUTChannelTypeDef PWM_OUTChanneln,double PWM_Frequency ,u16 PWM_Ratio);	//PWM设定-20161127版本
+void SetPWM_Ratio(u16 PWM_Ratio);		//设置占空比
 #endif

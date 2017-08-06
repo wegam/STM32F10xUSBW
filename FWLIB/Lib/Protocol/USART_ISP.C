@@ -45,7 +45,7 @@ Page£∫
 //#include "STM32_SYSTICK.H"
 //#include "STM32_USART.H"
 
-#define	 Usart_ISP_Simulation 		//ƒ£ƒ‚¥”ª˙
+//#define	 Usart_ISP_Simulation 		//ƒ£ƒ‚¥”ª˙
 /*******************************************************************************
 * ∫Ø ˝√˚			:	function
 * π¶ƒ‹√Ë ˆ		:	∫Ø ˝π¶ƒ‹Àµ√˜ 
@@ -87,29 +87,28 @@ void Usart_ISP_Process(ISP_Conf_TypeDef *ISP_Conf)
 *******************************************************************************/
 void Usart_ISP_SlaveProcess(ISP_Conf_TypeDef *ISP_Conf)		//ƒ£øÈ◊˜Œ™¥”ª˙ ±µƒ¥¶¿Ì≥Ã–Ú
 {
-	unsigned short RxNum=0;
-	RxNum=USART_ReadBufferIDLE(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_RvBuffer,(u32*)ISP_Conf->ISP_DATA.ISP_RxBuffer);	//¥Æø⁄ø’œ–ƒ£ Ω∂¡¥Æø⁄Ω” ’ª∫≥Â«¯£¨»Áπ˚”– ˝æ›£¨Ω´ ˝æ›øΩ±¥µΩRevBuffer,≤¢∑µªÿΩ” ’µΩµƒ ˝æ›∏ˆ ˝£¨»ª∫Û÷ÿ–¬Ω´Ω” ’ª∫≥Â«¯µÿ÷∑÷∏œÚRxdBuffer
-	if(RxNum)
+	ISP_Conf->ISP_DATA.ReceivedLen=USART_ReadBufferIDLE(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_RvBuffer,(u32*)ISP_Conf->ISP_DATA.ISP_RxBuffer);	//¥Æø⁄ø’œ–ƒ£ Ω∂¡¥Æø⁄Ω” ’ª∫≥Â«¯£¨»Áπ˚”– ˝æ›£¨Ω´ ˝æ›øΩ±¥µΩRevBuffer,≤¢∑µªÿΩ” ’µΩµƒ ˝æ›∏ˆ ˝£¨»ª∫Û÷ÿ–¬Ω´Ω” ’ª∫≥Â«¯µÿ÷∑÷∏œÚRxdBuffer
+	if(ISP_Conf->ISP_DATA.ReceivedLen)
 	{
 		ISP_Conf->OverRunTime=0;									//≥¨ ± ±º‰
-		if(RxNum==1)		//µ•◊÷Ω⁄---- ∂±≤®Ãÿ¬ 
+		if(ISP_Conf->ISP_DATA.ReceivedLen==1)			//µ•◊÷Ω⁄---- ∂±≤®Ãÿ¬ 
 		{
 			if(ISP_Conf->ISP_DATA.ISP_RvBuffer[0]==0x7F)	//◊‘æŸ”¶¥
 			{
 				Usart_ISP_Reset(ISP_Conf);														//÷ÿ÷√±‡≥Ã∆˜---ª÷∏¥À˘”–≤Œ ˝Œ™ƒ¨»œ÷µ
-				ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
+				Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
 				Usart_ISP_ACK(ISP_Conf);															//ISP”¶¥
 			}
 		}
-		else if(RxNum==2&&ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitCommand)				//2◊÷Ω⁄---Ω” ’√¸¡Óπ˝≥Ã
+		else if(ISP_Conf->ISP_DATA.ReceivedLen==2&&ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitCommand)				//2◊÷Ω⁄---Ω” ’√¸¡Óπ˝≥Ã
 		{
 			Usart_ISP_CommandRead(ISP_Conf);			//¥Æø⁄Ω” ’√¸¡Ó£®÷˜ª˙->¥”ª˙)
 		}
-		else if((RxNum==5&&(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitRAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitGoAddr))||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitEraseAddr)				//5∏ˆ◊÷Ω⁄---µÿ÷∑¿‡ ˝æ›Ω” ’µÿ÷∑π˝≥Ã
+		else if((ISP_Conf->ISP_DATA.ReceivedLen==5&&(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReadAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitGoAddr))||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitEraseAddr)				//5∏ˆ◊÷Ω⁄---µÿ÷∑¿‡ ˝æ›Ω” ’µÿ÷∑π˝≥Ã
 		{
 			Usart_ISP_GetAddr(ISP_Conf);						//ISPªÒ»°–¥ ˝æ›∆ ºµÿ÷∑(÷˜ª˙->¥”ª˙)
 		}
-		else if(RxNum==2&&ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitLengh)				//2◊÷Ω⁄---Ω” ’¥˝¥¶¿Ì ˝æ›≥§∂»£¨∂¡ ˝æ› ±£¨¥´»Îµÿ÷∑∫Û‘Ÿ¥´»Î¥˝∂¡»°µƒ ˝æ›≥§∂»
+		else if(ISP_Conf->ISP_DATA.ReceivedLen==2&&ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitLengh)				//2◊÷Ω⁄---Ω” ’¥˝¥¶¿Ì ˝æ›≥§∂»£¨∂¡ ˝æ› ±£¨¥´»Îµÿ÷∑∫Û‘Ÿ¥´»Î¥˝∂¡»°µƒ ˝æ›≥§∂»
 		{
 			Usart_ISP_GetLengh(ISP_Conf);					//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§∂»(÷˜ª˙->¥”ª˙)£¨∂¡ ˝æ› ±£¨¥´»Îµÿ÷∑∫Û‘Ÿ¥´»Î¥˝∂¡»°µƒ ˝æ›≥§∂»
 		}
@@ -119,13 +118,13 @@ void Usart_ISP_SlaveProcess(ISP_Conf_TypeDef *ISP_Conf)		//ƒ£øÈ◊˜Œ™¥”ª˙ ±µƒ¥¶¿Ì≥
 		}
 				
 	}
-	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitRData||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReaded)	//µ»¥˝ ˝æ›∂¡»°ÕÍ≥…
+	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReadData)	//µ»¥˝ ˝æ›∂¡»°ÕÍ≥…
 	{
-		Usart_ISP_ReadMemory(ISP_Conf);														//ISP∂¡ ˝æ›£®¥”ª˙->÷˜ª˙£©
+		Usart_ISP_ReadMemory(ISP_Conf);															//ISP∂¡ ˝æ›£®¥”ª˙->÷˜ª˙£©
 	}	
-	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitSData||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitSended)		//ISPµ»¥˝∑¢ÀÕ ˝æ›
+	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitSData)			//ISPµ»¥˝∑¢ÀÕ ˝æ›
 	{
-		Usart_ISP_SendBuffer(ISP_Conf);														//ISP…œ¥´ ˝æ›£®¥”ª˙->÷˜ª˙)
+		Usart_ISP_SendBuffer(ISP_Conf);															//ISP…œ¥´ ˝æ›£®¥”ª˙->÷˜ª˙)
 	}
 	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitErase||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitErased)		//ISPISPµ»¥˝≤¡≥˝
 	{
@@ -135,17 +134,13 @@ void Usart_ISP_SlaveProcess(ISP_Conf_TypeDef *ISP_Conf)		//ƒ£øÈ◊˜Œ™¥”ª˙ ±µƒ¥¶¿Ì≥
 	{
 		Usart_ISP_WriteMemory(ISP_Conf);			//ISP–¥ ˝æ›£®÷˜ª˙->¥”ª˙£©–¥ ˝æ› ±£¨¥´ÕÍµÿ÷∑∫Ûµ»¥˝¥´»Î ˝æ›£¨‘Ÿ÷¥–––¥≤Ÿ◊˜
 	}
-//	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitSended)	//µ»¥˝ ˝æ›∑¢ÀÕÕÍ≥…
-//	{
-//		//......
-//		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;				//µ»¥˝–¬µƒ√¸¡Ó
-//	}
 	else	if(ISP_Conf->ISP_SLAVE_STATUS!=ISP_STATUS_IDLE)				//∑«≥ı º◊¥Ã¨ ±≥¨ ±∏¥Œª
 	{
 		ISP_Conf->OverRunTime=ISP_Conf->OverRunTime+1;					//≥¨ ± ±º‰
-		if(ISP_Conf->OverRunTime>=2000000)		//‘º5√Î
+		if(ISP_Conf->OverRunTime>=5000000)		//‘º5√Î
 		Usart_ISP_Reset(ISP_Conf);				//÷ÿ÷√±‡≥Ã∆˜---ª÷∏¥À˘”–≤Œ ˝Œ™ƒ¨»œ÷µ
 	}
+//	ISP_Conf->ISP_DATA.NumHaveRead=0;	//Ω” ’µƒ ˝æ›∏ˆ ˝
 }
 /*******************************************************************************
 * ∫Ø ˝√˚			:	Usart_ISP_MasterProcess
@@ -208,7 +203,7 @@ void Usart_ISP_CommandSend(ISP_Conf_TypeDef *ISP_Conf,unsigned char Command)	//¥
 *******************************************************************************/
 void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//¥Æø⁄Ω” ’√¸¡Ó£®÷˜ª˙->¥”ª˙)
 {
-	unsigned short rxNum=0;
+//	unsigned short rxNum=0;
 	unsigned char C0=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];
 	unsigned char C1=ISP_Conf->ISP_DATA.ISP_RvBuffer[1];
 	C1=C1^0XFF;
@@ -234,11 +229,11 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//¥Æø⁄Ω” ’√¸¡Ó£®÷˜ª˙->¥
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[13]=ISP_COMMAND_RU;		//Readout Unprotect √¸¡Ó
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[14]=ISP_ANSWER_ACK;		//”¶¥
 		
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)--¥¶¿ÌÕÍGet√¸¡Ó∫Ûµ»¥˝œ¬“ªœ¬√¸¡Ó
-		rxNum=15;			//…œ±® ˝æ›¥Û–°
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)--¥¶¿ÌÕÍGet√¸¡Ó∫Ûµ»¥˝œ¬“ªœ¬√¸¡Ó
+		ISP_Conf->ISP_DATA.SendLen=15;												//¥Æø⁄–Ë“™∑¢ÀÕµƒ ˝æ›≥§∂»
 		
-		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, rxNum);
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,rxNum);	//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú	
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen);
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen);	//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú	
 			
 	}
 	else if(C0==ISP_COMMAND_GetVS)	//ªÒ»°◊‘æŸ≥Ã–Ú∞Ê±æº∞ Flash µƒ∂¡±£ª§◊¥Ã¨
@@ -249,11 +244,11 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//¥Æø⁄Ω” ’√¸¡Ó£®÷˜ª˙->¥
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[3]=0x00;							//—°œÓ◊÷Ω⁄ 2£∫0x00£¨±£≥÷”ÎÕ®”√◊‘æŸ≥Ã–Ú–≠“ÈµƒºÊ»›–‘
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[4]=ISP_ANSWER_ACK;		//”¶¥
 		
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)--¥¶¿ÌÕÍGetVS√¸¡Ó∫Ûµ»¥˝œ¬“ªœ¬√¸¡Ó
-		rxNum=5;			//…œ±® ˝æ›¥Û–°
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)--¥¶¿ÌÕÍGetVS√¸¡Ó∫Ûµ»¥˝œ¬“ªœ¬√¸¡Ó
+		ISP_Conf->ISP_DATA.SendLen=5;												//¥Æø⁄–Ë“™∑¢ÀÕµƒ ˝æ›≥§∂»
 		
-		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, rxNum);
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,rxNum);	//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú	
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen);
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen);	//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú	
 	}
 	else if(C0==ISP_COMMAND_GetID)	//ªÒ»°–æ∆¨ ID
 	{
@@ -263,36 +258,36 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//¥Æø⁄Ω” ’√¸¡Ó£®÷˜ª˙->¥
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[3]=0x10;							//PID(1) ◊÷Ω⁄ 3 = 0x04£¨◊÷Ω⁄ 4 = 0xXX
 		ISP_Conf->ISP_DATA.ISP_TvBuffer[4]=ISP_ANSWER_ACK;		//”¶¥
 		
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)--¥¶¿ÌÕÍGetID√¸¡Ó∫Ûµ»¥˝œ¬“ªœ¬√¸¡Ó
-		rxNum=5;			//…œ±® ˝æ›¥Û–°
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);		//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)--¥¶¿ÌÕÍGetID√¸¡Ó∫Ûµ»¥˝œ¬“ªœ¬√¸¡Ó
+		ISP_Conf->ISP_DATA.SendLen=5;												//¥Æø⁄–Ë“™∑¢ÀÕµƒ ˝æ›≥§∂»
 		
-		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, rxNum);
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,rxNum);	//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú	
+		memcpy(ISP_Conf->ISP_DATA.ISP_TxBuffer, ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen);
+		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen);	//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú	
 	}
 	else if(C0==ISP_COMMAND_RM)			//¥””¶”√≥Ã–Ú÷∏∂®µƒµÿ÷∑ø™ º∂¡»°◊Ó∂‡ 256 ∏ˆ◊÷Ω⁄µƒ¥Ê¥¢∆˜ø’º‰£∫∂¡ ˝æ›∑÷ŒÂ≤Ω£∫1-∂¡ ˝æ›√¸¡Ó£¨2-∂¡ ˝æ›∆ ºµÿ÷∑£¨3-–Ë“™∂¡»°µƒ≥§∂»£¨4-∂¡ ˝æ›π˝≥Ã£¨5-…œ±® ˝æ›
 	{
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitRAddr;			//ISPµ»¥˝¥˝∂¡»°µÿ÷∑---¥”ª˙Ω” ’µΩ∂¡ ˝æ›√¸¡Ó∫Û”¶¥£¨»ª∫Ûµ»¥˝¥˝∂¡»° ˝æ›µÿ÷∑
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitReadAddr);			//ISPµ»¥˝¥˝∂¡»°µÿ÷∑---¥”ª˙Ω” ’µΩ∂¡ ˝æ›√¸¡Ó∫Û”¶¥£¨»ª∫Ûµ»¥˝¥˝∂¡»° ˝æ›µÿ÷∑
 		Usart_ISP_ACK(ISP_Conf);															//ISP”¶¥
 		return;
 	}
 	else if(C0==ISP_COMMAND_Go)			//µ»¥˝¥˝Ã¯◊™µΩƒ⁄≤ø Flash ªÚ SRAM ƒ⁄µƒ”¶”√≥Ã–Ú¥˙¬Îµÿ÷∑//Go √¸¡Ó”√”⁄¥””¶”√≥Ã–Ú÷∏∂®µƒµÿ÷∑ø™ º÷¥––“—œ¬‘ÿµƒ¥˙¬ÎªÚ∆‰À¸»Œ∫Œ¥˙¬Î
 	{
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitGoAddr;			//Ω” ’µΩGo√¸¡Ó∫Û£¨”¶¥£¨»ª∫Ûµ»¥˝ø™ º÷¥––∆ ºµÿ÷∑
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitGoAddr);			//Ω” ’µΩGo√¸¡Ó∫Û£¨”¶¥£¨»ª∫Ûµ»¥˝ø™ º÷¥––∆ ºµÿ÷∑
 		Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 	}
 	else if(C0==ISP_COMMAND_WM)			//Write Memory:¥””¶”√≥Ã–Ú÷∏∂®µƒµÿ÷∑ø™ ºΩ´◊Ó∂‡ 256 ∏ˆ◊÷Ω⁄µƒ ˝æ›–¥»Î RAM ªÚ Flash
 	{
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitWAddr;			//ISPµ»¥˝¥˝–¥»Îµÿ÷∑---Ω” ’µΩ–¥√¸¡Ó∫Û£¨”¶¥£¨»ª∫Ûµ»¥˝–¥»Î∆ ºµÿ÷∑
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitWAddr);			//ISPµ»¥˝¥˝–¥»Îµÿ÷∑---Ω” ’µΩ–¥√¸¡Ó∫Û£¨”¶¥£¨»ª∫Ûµ»¥˝–¥»Î∆ ºµÿ÷∑
 		Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 	}
 	else if(C0==ISP_COMMAND_Erase)	//≤¡≥˝“ª∏ˆµΩ»´≤ø Flash “≥√Ê
 	{
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitEraseAddr;	//ISPµ»¥˝¥˝≤¡≥˝µÿ÷∑£¨Ω” ’µΩ≤¡≥˝√¸¡Ó∫Û£¨”¶¥£¨µ»¥˝ ‰»Î¥˝≤¡≥˝µÿ÷∑£®»´≤ø≤¡≥˝ªÚ’ﬂ“≥≤¡≥˝£©
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitEraseAddr);	//ISPµ»¥˝¥˝≤¡≥˝µÿ÷∑£¨Ω” ’µΩ≤¡≥˝√¸¡Ó∫Û£¨”¶¥£¨µ»¥˝ ‰»Î¥˝≤¡≥˝µÿ÷∑£®»´≤ø≤¡≥˝ªÚ’ﬂ“≥≤¡≥˝£©
 		Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 	}
 	else if(C0==ISP_COMMAND_EE)			// π”√À´◊÷Ω⁄—∞÷∑ƒ£ Ω≤¡≥˝“ª∏ˆµΩ»´≤ø Flash “≥√Ê£®Ωˆ”√”⁄v3.0 usart ◊‘æŸ≥Ã–Ú∞Ê±æº∞“‘…œ∞Ê±æ£©°£
 	{
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitEraseAddr;	//ISPµ»¥˝¥˝≤¡≥˝µÿ÷∑£¨Ω” ’µΩ≤¡≥˝√¸¡Ó∫Û£¨”¶¥£¨µ»¥˝ ‰»Î¥˝≤¡≥˝µÿ÷∑£®»´≤ø≤¡≥˝ªÚ’ﬂ“≥≤¡≥˝£©
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitEraseAddr);	//ISPµ»¥˝¥˝≤¡≥˝µÿ÷∑£¨Ω” ’µΩ≤¡≥˝√¸¡Ó∫Û£¨”¶¥£¨µ»¥˝ ‰»Î¥˝≤¡≥˝µÿ÷∑£®»´≤ø≤¡≥˝ªÚ’ﬂ“≥≤¡≥˝£©
 		Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 	}
 	else if(C0==ISP_COMMAND_WP)			// πƒ‹ƒ≥–©…»«¯µƒ–¥±£ª§
@@ -345,7 +340,7 @@ void Usart_ISP_CommandRead(ISP_Conf_TypeDef *ISP_Conf)			//¥Æø⁄Ω” ’√¸¡Ó£®÷˜ª˙->¥
 *******************************************************************************/
 void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISPªÒ»°–¥ ˝æ›∆ ºµÿ÷∑(÷˜ª˙->¥”ª˙)
 {	
-	//ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitRAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitEraseAddr)
+	//ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReadAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWAddr||ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitEraseAddr)
 	//–Ë“™Ω” ’µÿ÷∑µƒ÷∏¡Ó£∫∂¡ ˝æ›£¨–¥ ˝æ›£¨≤¡≥˝
 	if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitEraseAddr)			//ISP≤¡≥˝≤Ÿ◊˜£¨Ω” ’µΩ≤¡≥˝√¸¡Ó∫Û£¨”¶¥£¨µ»¥˝ ‰»Î¥˝≤¡≥˝µÿ÷∑£®»´≤ø≤¡≥˝ªÚ’ﬂ“≥≤¡≥˝£©µ»¥˝≤¡≥˝ÕÍ≥…£¨ÕÍ≥…∫Û”¶¥
 	{
@@ -357,7 +352,7 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISPªÒ»°–¥ ˝æ›∆ ºµÿ÷∑(÷˜ª˙
 			return;
 		}
 		ISP_Conf->ISP_DATA.WriteAddr=C0;													//¥˝–¥ ˝æ›µƒ∆ ºµÿ÷∑--≤¡≥˝Œ™–¥»Î0xFF
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitErase;						//µ»¥˝Ω” ’¥˝–¥»Îµƒ ˝æ›
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitErase);						//µ»¥˝Ω” ’¥˝–¥»Îµƒ ˝æ›
 	}
 	else
 	{
@@ -374,23 +369,23 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISPªÒ»°–¥ ˝æ›∆ ºµÿ÷∑(÷˜ª˙
 			addr+=(ISP_Conf->ISP_DATA.ISP_RvBuffer[2])<<8;
 			addr+=(ISP_Conf->ISP_DATA.ISP_RvBuffer[3]);
 		}
-		if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitRAddr)					//µ»¥˝Ω” ’∂¡ ˝æ›∆µÿ÷∑£¨Ω” ’µΩµÿ÷∑∫Û”¶¥£¨‘Ÿµ»¥˝¥˝∂¡»° ˝æ›≥§∂»
+		if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReadAddr)				//µ»¥˝Ω” ’∂¡ ˝æ›∆µÿ÷∑£¨Ω” ’µΩµÿ÷∑∫Û”¶¥£¨‘Ÿµ»¥˝¥˝∂¡»° ˝æ›≥§∂»
 		{
 			ISP_Conf->ISP_DATA.ReadAddr=addr;														//¥˝∂¡ ˝æ›µƒ∆ ºµÿ÷∑
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitLengh;						//µ»¥˝Ω” ’–Ë“™∂¡»°µƒ ˝æ›≥§∂»
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitLengh);						//µ»¥˝Ω” ’–Ë“™∂¡»°µƒ ˝æ›≥§∂»
 			Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 		}
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWAddr)			//µ»¥˝Ω” ’–¥ ˝æ›µÿ÷∑£¨Ω” ’µΩµÿ÷∑∫Û”¶¥£¨‘Ÿµ»¥˝¥˝–¥»Îµƒ ˝æ›
 		{
 			ISP_Conf->ISP_DATA.WriteAddr=addr;													//¥˝–¥ ˝æ›µƒ∆ ºµÿ÷∑
-			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitWData);	//…Ë÷√¥”ª˙◊¥Ã¨--µ»¥˝Ω” ’¥˝–¥»Îµƒ ˝æ›
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitWData);		//…Ë÷√¥”ª˙◊¥Ã¨--µ»¥˝Ω” ’¥˝–¥»Îµƒ ˝æ›
 //			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitWData;						//µ»¥˝Ω” ’¥˝–¥»Îµƒ ˝æ›
 			Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 		}
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitGoAddr)			//µ»¥˝Ω” ’–¥ ˝æ›µÿ÷∑£¨Ω” ’µΩµÿ÷∑∫Û”¶¥£¨‘Ÿµ»¥˝¥˝–¥»Îµƒ ˝æ›
 		{
-			ISP_Conf->ISP_DATA.GoAddr=addr;													//¥˝–¥ ˝æ›µƒ∆ ºµÿ÷∑
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_IDLE;							//ISPø’œ–◊¥Ã¨£¨ø…“‘∂¡–¥
+			ISP_Conf->ISP_DATA.GoAddr=addr;																//¥˝–¥ ˝æ›µƒ∆ ºµÿ÷∑
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_IDLE);						//ISPø’œ–◊¥Ã¨£¨ø…“‘∂¡–¥
 			Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
 		}
 	}
@@ -403,6 +398,13 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISPªÒ»°–¥ ˝æ›∆ ºµÿ÷∑(÷˜ª˙
 *******************************************************************************/
 void Usart_ISP_SetAddr(ISP_Conf_TypeDef *ISP_Conf)					//ISP…Ë÷√–¥ ˝æ›∆ ºµÿ÷∑(÷˜ª˙->¥”ª˙)
 {
+	#ifdef	Usart_ISP_Simulation 		//ƒ£ƒ‚¥”ª˙
+	{
+	}
+	#else
+	{
+	}
+	#endif
 }
 /*******************************************************************************
 *∫Ø ˝√˚			:	function
@@ -411,9 +413,8 @@ void Usart_ISP_SetAddr(ISP_Conf_TypeDef *ISP_Conf)					//ISP…Ë÷√–¥ ˝æ›∆ ºµÿ÷∑(÷
 *∑µªÿ÷µ			:	Œﬁ
 *******************************************************************************/
 void Usart_ISP_GetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§∂»(÷˜ª˙->¥”ª˙)£¨∂¡ ˝æ› ±£¨¥´»Îµÿ÷∑∫Û‘Ÿ¥´»Î¥˝∂¡»°µƒ ˝æ›≥§∂»
-{
+{	
 	//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§∂»(÷˜ª˙->¥”ª˙)£¨∂¡ ˝æ› ±£¨¥´»Îµÿ÷∑∫Û‘Ÿ¥´»Î¥˝∂¡»°µƒ ˝æ›≥§∂»£¨Ω” ’µΩ≥§∂» ˝æ›∫Û÷¥––∂¡ ˝æ›≤Ÿ◊˜£¨»ª∫Û…œ¥´ ˝æ›
-	unsigned short rxNum=0;
 	unsigned char C0=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];
 	unsigned char C1=ISP_Conf->ISP_DATA.ISP_RvBuffer[1];
 	C1=C1^0XFF;
@@ -423,10 +424,10 @@ void Usart_ISP_GetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§
 	}
 	else
 	{
-		ISP_Conf->ISP_DATA.ReadLen=C0;										//¥˝∂¡»°µƒ ˝æ›≥§∂»
-		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitRData);	//…Ë÷√¥”ª˙◊¥Ã¨--ISPµ»¥˝∂¡ ˝æ›≤Ÿ◊˜
-//		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitRData;	//ISPµ»¥˝∂¡ ˝æ›≤Ÿ◊˜
+		ISP_Conf->ISP_DATA.SendLen=C0;										//–Ë“™Õ˘¥Æø⁄∑¢ÀÕµƒ ˝æ›∏ˆ ˝
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitReadData);	//…Ë÷√¥”ª˙◊¥Ã¨--ISPµ»¥˝∂¡ ˝æ›≤Ÿ◊˜
 	}
+//		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitReadData;	//ISPµ»¥˝∂¡ ˝æ›≤Ÿ◊˜
 }
 /*******************************************************************************
 *∫Ø ˝√˚			:	function
@@ -436,7 +437,13 @@ void Usart_ISP_GetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§
 *******************************************************************************/
 void Usart_ISP_SetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§∂»(÷˜ª˙->¥”ª˙)
 {
-
+	#ifdef	Usart_ISP_Simulation 		//ƒ£ƒ‚¥”ª˙
+	{
+	}
+	#else
+	{
+	}
+	#endif
 }
 
 /*******************************************************************************
@@ -447,36 +454,23 @@ void Usart_ISP_SetLengh(ISP_Conf_TypeDef *ISP_Conf)				//ISPªÒ»°–Ë“™∂¡»°µƒ ˝æ›≥§
 *******************************************************************************/
 void Usart_ISP_ReadMemory(ISP_Conf_TypeDef *ISP_Conf)		//ISP∂¡ ˝æ›£®¥”ª˙->÷˜ª˙£©
 {	
-	if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitRData)				//ISPµ»¥˝∂¡ ˝æ›≤Ÿ◊˜
+	#ifdef	Usart_ISP_Simulation 		//ƒ£ƒ‚¥”ª˙
 	{
 		//*******************÷¥––∂¡ ˝æ›≤Ÿ◊˜
-		#ifdef	Usart_ISP_Simulation 		//ƒ£ƒ‚¥”ª˙
-		{
-			ISP_Conf->ISP_DATA.ISP_TxBuffer[0]=0x79;
-			memcpy(&ISP_Conf->ISP_DATA.ISP_TxBuffer[1], ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.ReadLen+1);	//∏¥÷∆ ˝æ›
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitSData;		//ISPµ»¥˝∑¢ÀÕ ˝æ›			
-		}
-		#else
-		{
-			//*******************
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitReaded;		//ISPµ»¥˝∂¡∂¡ ˝ÕÍ≥…
-		}
-		#endif		
+//		ISP_Conf->ISP_DATA.ISP_TxBuffer[0]=0x79;
+//		memcpy(&ISP_Conf->ISP_DATA.ISP_TxBuffer[1], ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen+1);	//∏¥÷∆ ˝æ›
+		Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitSData);		//ISPµ»¥˝∑¢ÀÕ ˝æ›			
 	}
-	else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReaded)	//ISPµ»¥˝∂¡∂¡ ˝ÕÍ≥…
+	#else
 	{
-		//*******************µ»¥˝ ˝æ›∂¡»°ÕÍ≥…£¨ ˝æ›∂¡»°ÕÍ≥…∫Û∑¢ÀÕ ˝æ›£¨»ª∫Ûµ»¥˝∑¢ÀÕÕÍ≥…
-//		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitSended;		//ISPµ»¥˝ ˝æ›…œ¥´ÕÍ≥…
+		//*******************÷¥––∂¡ ˝æ›≤Ÿ◊˜
+		//----¥ÀŒ™µ»¥˝Õ‚≤øFlash∂¡»° ˝æ›ÕÍ≥…£¨µ± ˝æ›∂¡»°ÕÍ≥…∫Û£¨”…Õ‚≤ø≥Ã–Ú…Ë÷√ISP_STATUS_WaitSData◊¥Ã¨
+		//1£©Õ‚≤øºÏ≤‚µΩISP_STATUS_WaitReadData◊¥Ã¨∫Û
+		//2£©∏˘æ›µÿ÷∑ReadAddr∫Õ¥˝∑¢ÀÕ≥§∂»SendLen∂¡»°œ‡”¶ ˝æ›
+		//3£©∂¡»°ÕÍ≥…∫Û£¨Ω´ ˝æ›∏¥÷∆µΩISP_Conf->ISP_DATA.ISP_TvBuffer∑¢ÀÕ±∏∑›«¯
+		//4£©…Ë÷√ISP_STATUS_WaitSData◊¥Ã¨£¨±Ì æ ˝æ›◊º±∏ÕÍ≥…£¨µ»¥˝∑¢ÀÕ
 	}
-//	unsigned short Wlen=ISP_Conf->ISP_RvBuffer[0];	//ªÒ»°“™–¥»Îµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)
-//	unsigned char Bcc=BCC8(ISP_Conf->ISP_RvBuffer,Wlen+2);		//“ÏªÚ–£—È;
-//	if(Bcc!=ISP_Conf->ISP_RvBuffer[Wlen+2])
-//	{
-//		return;
-//	}
-//	ISP_Conf->ISP_STATUS=ISP_STATUS_WRITE;		//FLASH÷¥–––¥≤Ÿ◊˜
-//	memcpy(ISP_Conf->ISP_TvBuffer, &ISP_Conf->ISP_RvBuffer[1], Wlen+1);
-//	Usart_ISP_ACK(ISP_Conf);						//ISP”¶¥
+	#endif
 }
 /*******************************************************************************
 * ∫Ø ˝√˚			:	Usart_ISP_CommandSend
@@ -490,23 +484,43 @@ void Usart_ISP_WriteMemory(ISP_Conf_TypeDef *ISP_Conf)	//ISP–¥ ˝æ›£®÷˜ª˙->¥”ª˙£©
 	{
 		if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWData)		//ISPµ»¥˝Ω” ’¥˝–¥»Î ˝æ›
 		{
-			unsigned short Wlen=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];	//ªÒ»°“™–¥»Îµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)
-			unsigned char Bcc=BCC8(ISP_Conf->ISP_DATA.ISP_RvBuffer,Wlen+2);		//“ÏªÚ–£—È;
+			unsigned char	Wlen=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];						//“™–¥»ÎFlashµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)
+			unsigned char Bcc=BCC8(ISP_Conf->ISP_DATA.ISP_RvBuffer,Wlen+2);		//“ÏªÚ–£—È;					
 			if(Bcc!=ISP_Conf->ISP_DATA.ISP_RvBuffer[Wlen+2])
 			{
 				return;
 			}
-			memcpy(ISP_Conf->ISP_DATA.ISP_TvBuffer, &ISP_Conf->ISP_DATA.ISP_RvBuffer[1], Wlen+1);	//∏¥÷∆ ˝æ›
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitWrited;				//ISPµ»¥˝–¥»ÎÕÍ≥…
+			ISP_Conf->ISP_DATA.WriteLen=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];		//“™–¥»ÎFlashµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)	
+			memcpy(ISP_Conf->ISP_DATA.ISP_TvBuffer, &ISP_Conf->ISP_DATA.ISP_RvBuffer[1], ISP_Conf->ISP_DATA.WriteLen+1);	//∏¥÷∆ ˝æ›
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitWrited);				//ISPµ»¥˝–¥»ÎÕÍ≥…
 		}
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWrited)	//ISPµ»¥˝–¥»ÎÕÍ≥…
 		{
 			Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;				//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);				//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
 		}
 	}
 	#else
 	{
+		if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWData)		//ISPµ»¥˝Ω” ’¥˝–¥»Î ˝æ›
+		{
+			unsigned char	Wlen=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];						//“™–¥»ÎFlashµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)
+			unsigned char Bcc=BCC8(ISP_Conf->ISP_DATA.ISP_RvBuffer,Wlen+2);		//“ÏªÚ–£—È;					
+			if(Bcc!=ISP_Conf->ISP_DATA.ISP_RvBuffer[Wlen+2])
+			{
+				return;
+			}
+			ISP_Conf->ISP_DATA.WriteLen=ISP_Conf->ISP_DATA.ISP_RvBuffer[0];		//“™–¥»ÎFlashµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)	
+			//µ±Õ‚≤øºÏ≤‚µΩISP_STATUS_WaitWrite◊¥Ã¨ ±£¨∏˘æ›ISP_Conf->ISP_DATA.WriteLen≥§∂»Õ˘Flash–¥»Î ˝æ›£¨–¥»ÎÕÍ≥…µΩ…Ë÷√ISP_STATUS_WaitWrited◊¥Ã¨
+			memcpy(ISP_Conf->ISP_DATA.ISP_RvBuffer, &ISP_Conf->ISP_DATA.ISP_RvBuffer[1], ISP_Conf->ISP_DATA.WriteLen+1);	//∏¥÷∆ ˝æ›
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitWrite);				//ISPµ»¥˝–¥ ˝æ›
+		}
+		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWrited)	//ISPµ»¥˝–¥»ÎÕÍ≥…
+		{
+			//µ±Õ‚≤øºÏ≤‚µΩISP_STATUS_WaitWrite◊¥Ã¨ ±£¨∏˘æ›ISP_Conf->ISP_DATA.WriteLen≥§∂»Õ˘Flash–¥»Î ˝æ›£¨–¥»ÎÕÍ≥…µΩ…Ë÷√ISP_STATUS_WaitWrited◊¥Ã¨
+			Usart_ISP_ACK(ISP_Conf);	//ISP”¶¥
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);				//ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
+		}
 	}
 	#endif
 //	unsigned short Wlen=ISP_Conf->ISP_RvBuffer[0];	//ªÒ»°“™–¥»Îµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)
@@ -527,17 +541,12 @@ void Usart_ISP_WriteMemory(ISP_Conf_TypeDef *ISP_Conf)	//ISP–¥ ˝æ›£®÷˜ª˙->¥”ª˙£©
 *******************************************************************************/
 void Usart_ISP_SendBuffer(ISP_Conf_TypeDef *ISP_Conf)	//ISP…œ¥´ ˝æ›£®¥”ª˙->÷˜ª˙)
 {	
-	if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitSData)
-	{
-//		ISP_Conf->ISP_DATA.ISP_TxBuffer[0]=0x79;
-//		memcpy(&ISP_Conf->ISP_DATA.ISP_TxBuffer[1], ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.ReadLen);	//∏¥÷∆ ˝æ›
-		USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.ReadLen+2);				//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitSended;				//µ»¥˝–¬µƒ√¸¡Ó
-	}
-	else	if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitSended)
-	{
-		ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;				//µ»¥˝–¬µƒ√¸¡Ó
-	}
+
+	ISP_Conf->ISP_DATA.ISP_TxBuffer[0]=0x79;
+	memcpy(&ISP_Conf->ISP_DATA.ISP_TxBuffer[1], ISP_Conf->ISP_DATA.ISP_TvBuffer, ISP_Conf->ISP_DATA.SendLen+1);	//∏¥÷∆ ˝æ›
+	USART_DMASend(ISP_Conf->USARTx,(u32*)ISP_Conf->ISP_DATA.ISP_TxBuffer,ISP_Conf->ISP_DATA.SendLen+2);				//¥Æø⁄DMA∑¢ÀÕ≥Ã–Ú
+	Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);				//“—æ≠ÕÍ≥… ˝æ›∑¢ÀÕ√¸¡Ó£¨◊¥Ã¨∏¸–¬Œ™µ»¥˝œ¬“ª∏ˆ√¸¡ÓISP_STATUS_WaitCommand
+
 	
 //	unsigned short Wlen=ISP_Conf->ISP_RvBuffer[0];	//ªÒ»°“™–¥»Îµƒ ˝æ›≥§∂»£®◊÷Ω⁄ ˝)
 //	unsigned char Bcc=BCC8(ISP_Conf->ISP_RvBuffer,Wlen+2);		//“ÏªÚ–£—È;
@@ -566,12 +575,12 @@ void Usart_ISP_Erase(ISP_Conf_TypeDef *ISP_Conf)				//ISP≤¡≥˝≤Ÿ◊˜£¨Ω” ’µΩ≤¡≥˝√¸¡
 			{
 				Usart_ISP_ACK(ISP_Conf);													//ISP”¶¥---≤¡≥˝ÕÍ≥…
 				Usart_ISP_Reset(ISP_Conf);												//÷ÿ÷√±‡≥Ã∆˜---ª÷∏¥À˘”–≤Œ ˝Œ™ƒ¨»œ÷µ---ƒ£ Ω«–ªª∫Û∏¥Œª
-				ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitErased;	//◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…
+				Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitErased);	//◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…
 			}
 		}
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitErased)	//µ»¥˝≤¡≥˝ÕÍ≥…
 		{
-			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitCommand;	//◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…£¨ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);	//◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…£¨ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
 		}
 	}
 	#else
@@ -580,10 +589,13 @@ void Usart_ISP_Erase(ISP_Conf_TypeDef *ISP_Conf)				//ISP≤¡≥˝≤Ÿ◊˜£¨Ω” ’µΩ≤¡≥˝√¸¡
 		{
 			if(ISP_Conf->ISP_DATA.WriteAddr==0xFF)	//»´≤ø≤¡≥˝
 			{
-				Usart_ISP_ACK(ISP_Conf);							//ISP”¶¥---≤¡≥˝ÕÍ≥…
-				Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitErased);	//…Ë÷√¥”ª˙◊¥Ã¨--◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…
-//				ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitErased;	//◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…
+				Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_Eraseing);			//…Ë÷√¥”ª˙◊¥Ã¨--ISP’˝‘⁄≤¡≥˝
 			}
+		}
+		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitErased)			//µ»¥˝≤¡≥˝ÕÍ≥…
+		{
+			Usart_ISP_ACK(ISP_Conf);							//ISP”¶¥---≤¡≥˝ÕÍ≥…
+			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitCommand);	//◊¥Ã¨Œ™≤¡≥˝ÕÍ≥…£¨ISPµ»¥˝√¸¡Ó£®◊˜Œ™¥”ª˙)
 		}
 		
 	}	
@@ -619,12 +631,11 @@ void Usart_ISP_Reset(ISP_Conf_TypeDef *ISP_Conf)	//÷ÿ÷√±‡≥Ã∆˜---ª÷∏¥À˘”–≤Œ ˝Œ™ƒ¨
 {	
 	ISP_Conf->ISP_SLAVE_STATUS			=	ISP_STATUS_IDLE;	//FLASHø’œ–◊¥Ã¨£¨ø…“‘∂¡–¥
 	ISP_Conf->OverRunTime						=	0;								//≥¨ ± ±º‰
-	ISP_Conf->ISP_DATA.NumToSave		=	0;		//Ω” ’µΩµƒ”––ß ˝æ›
-	ISP_Conf->ISP_DATA.NumToSend		=	0;		//–Ë“™Õ˘¥Æø⁄∑¢ÀÕµƒ ˝æ›∏ˆ ˝
+	ISP_Conf->ISP_DATA.ReceivedLen	=	0;		//¥Æø⁄Ω” ’µƒ ˝æ›∏ˆ ˝
+	ISP_Conf->ISP_DATA.SendLen			=	0;		//–Ë“™Õ˘¥Æø⁄∑¢ÀÕµƒ ˝æ›∏ˆ ˝
 	ISP_Conf->ISP_DATA.OffsetAddr		=	0;		//–¥¥”ª˙ ±µƒµÿ÷∑∆´“∆
 	ISP_Conf->ISP_DATA.StartAddr		=	0;		//∆ ºµÿ÷∑
 	ISP_Conf->ISP_DATA.ReadAddr			=	0;		//∂¡ ˝æ›∆ ºµÿ÷∑
-	ISP_Conf->ISP_DATA.ReadLen			=	0;		//–Ë“™∂¡»°µƒ≥§∂»
 	ISP_Conf->ISP_DATA.WriteAddr		=	0;		//–¥»Î ˝æ›∆ ºµÿ÷∑
 	ISP_Conf->ISP_DATA.WriteLen			=	0;		//–Ë“™–¥»Îµƒ≥§∂»
 	memset(ISP_Conf->ISP_DATA.ISP_RxBuffer,0xFF, ISP_BufferSize);	//Ω” ’ª∫≥Â«¯

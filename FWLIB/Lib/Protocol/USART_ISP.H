@@ -87,16 +87,16 @@ typedef enum _ISP_SLAVE_STATUS			//ISP状态标志---工作在从机状态时
 	ISP_STATUS_WaitCommand,			//ISP等待命令（作为从机)
 	ISP_STATUS_WaitEraseAddr,		//ISP等待待擦除地址
 	ISP_STATUS_WaitErase,				//ISP等待擦除
+	ISP_STATUS_Eraseing,				//ISP正在擦除
 	ISP_STATUS_WaitErased,			//ISP等待擦除完成
 	ISP_STATUS_WaitWAddr,				//ISP等待待写入地址
 	ISP_STATUS_WaitWData,				//ISP等待接收待写入数据
+	ISP_STATUS_WaitWrite,				//ISP等待写数据
 	ISP_STATUS_WaitWrited,			//ISP等待写入完成
-	ISP_STATUS_WaitRAddr,				//ISP等待待读取地址
-	ISP_STATUS_WaitRData,				//ISP等待读数据操作
-	ISP_STATUS_WaitReaded,			//ISP等待读读数完成
+	ISP_STATUS_WaitReadAddr,		//ISP等待待读取地址
+	ISP_STATUS_WaitReadData,		//ISP等待读数据操作
 	ISP_STATUS_WaitLengh,				//ISP等待待读取长度
 	ISP_STATUS_WaitSData,				//ISP等待发送数据
-	ISP_STATUS_WaitSended,			//ISP等待数据上传完成
 	ISP_STATUS_WaitGoAddr				//等待待跳转到内部 Flash 或 SRAM 内的应用程序代码地址//Go 命令用于从应用程序指定的地址开始执行已下载的代码或其它任何代码
 }ISP_SLAVE_STATUS_TypeDef;
 typedef enum _ISP_MASTER_STATUS			//ISP状态标志---工作在主机状态时
@@ -132,18 +132,20 @@ typedef	struct _ISP_Version		//USART 自举程序版本
 
 typedef	struct _ISP_DATA				//ISP数据存储区域
 {
-	unsigned int NumToSave		;		//接收到的有效数据
-	unsigned int NumToSend		;		//需要往串口发送的数据个数
-	
 	unsigned int OffsetAddr		;		//写从机时的地址偏移
 	unsigned int StartAddr		;		//起始地址
-	unsigned int GoAddr		;		//起始地址
+	unsigned int GoAddr				;		//起始地址
+	
+	unsigned int ReceivedLen	;		//串口接收的数据个数
+	unsigned int SendLen			;		//需要往串口发送的数据个数
+//	unsigned int NumToSave		;		//接收到的有效数据
+//	unsigned int NumToSend		;		//需要往串口发送的数据个数
 	
 	unsigned int ReadAddr			;		//读数据起始地址
-	unsigned int ReadLen			;		//需要读取的长度
+//	unsigned int ReadLen			;		//需要读取的长度
 	
-	unsigned int WriteAddr		;		//写入数据起始地址
-	unsigned int WriteLen			;		//需要写入的长度	
+	unsigned int WriteAddr		;		//要写入Flash的数据起始地址
+	unsigned int WriteLen			;		//要写入Flash的数据长度（字节数)
 	
 	unsigned char Command[2]	;		//自举程序命令及异或校验码
 

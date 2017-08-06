@@ -30,6 +30,9 @@ Page：
 #include "STM32_USART.H"
 #include "STM32_WDG.H"
 
+#include "string.h"
+
+
 #define 	USART_BufferSize				512
 
 //ISP_Conf_TypeDef 	ISP_Conf;
@@ -37,7 +40,8 @@ Page：
 
 u8 RxdBuffe[USART_BufferSize]={0};
 u8 RevBuffe[USART_BufferSize]={0};
-
+u16 PWM_Ratio=0;
+u8 flag=0;
 
 typedef struct
 {
@@ -64,8 +68,8 @@ void OFFLINE_ISP_Configuration(void)
 	
 	OFFLINE_ISP_Conf();
 	
-	IWDG_Configuration(100);					//独立看门狗配置---参数单位ms	
-	SysTick_Configuration(50);				//系统嘀嗒时钟配置72MHz,单位为uS
+	IWDG_Configuration(2000);					//独立看门狗配置---参数单位ms	
+	SysTick_Configuration(10);				//系统嘀嗒时钟配置72MHz,单位为uS
 }
 /*******************************************************************************
 * 函数名		:
@@ -88,11 +92,61 @@ void OFFLINE_ISP_Server(void)
 //		SPI_FLASH_BufferRead	(&(OFFLINE_Cof.SPI_FLASH),	RevBuffe, OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_WriteAdrr, RxNum);
 //		OFFLINE_Cof.SPI_FLASH.SPI_FLASH_Info.SPI_FLASH_WriteAdrr+=RxNum;
 	}
+	OFFLINE_ISP_StatusProcess();		//状态处理
 	Usart_ISP_Process(&(OFFLINE_Cof.ISP_Conf));
 	SPI_FLASH_Process(&(OFFLINE_Cof.SPI_FLASH));			//FLASH数据处理：所有的FLASH对外操作接口
-
+	
+//	PWM_Ratio+=1;
+//	if(PWM_Ratio>=3600)
+//	{
+//		flag=1;
+//		PWM_Ratio=0;
+//	}
+//	if(flag==0)
+//	{
+//		PWM_Ratio++;
+//		if(PWM_Ratio>=3600)
+//		{
+//			flag=1;
+////			PWM_Ratio=0;
+//		}
+//	}
+//	else
+//	{
+//		PWM_Ratio--;
+//		if(PWM_Ratio<=1800)
+//		{
+//			flag=0;
+//		}
+//	}
+//	
+//	SetPWM_Ratio(PWM_Ratio);		//设置占空比
 	
 }
+/*******************************************************************************
+*函数名			:	function
+*功能描述		:	函数功能说明
+*输入				: 
+*返回值			:	无
+*******************************************************************************/
+void OFFLINE_ISP_StatusProcess(void)		//状态处理
+{
+	if(Usart_ISP_GetSlaveStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_STATUS_WaitReadData)	//返回从机状态值
+	{
+//		memcpy((OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer), OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_RvBuffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.WriteLen+1);	//复制数据
+		Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitSData);	//设置从机状态
+	}
+	else if(Usart_ISP_GetSlaveStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_STATUS_WaitWrite)	//ISP等待写数据
+	{
+		memcpy((OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_TvBuffer), OFFLINE_Cof.ISP_Conf.ISP_DATA.ISP_RvBuffer, OFFLINE_Cof.ISP_Conf.ISP_DATA.WriteLen+1);	//复制数据
+		Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitWrited);	//设置从机状态--ISP等待写入完成
+	}
+	else if(Usart_ISP_GetSlaveStatus(&(OFFLINE_Cof.ISP_Conf))==ISP_STATUS_Eraseing)	//ISP正在擦除---SPI_FLASH执行擦除操作
+	{
+		Usart_ISP_SetSlaveStatus(&(OFFLINE_Cof.ISP_Conf),ISP_STATUS_WaitErased);			//设置从机状态--等待擦除完成
+	}
+}
+
 /*******************************************************************************
 * 函数名		:
 * 功能描述	:
