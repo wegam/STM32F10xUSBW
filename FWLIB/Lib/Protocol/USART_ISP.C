@@ -369,6 +369,7 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISP获取写数据起始地址(主机
 			addr+=(ISP_Conf->ISP_DATA.ISP_RvBuffer[2])<<8;
 			addr+=(ISP_Conf->ISP_DATA.ISP_RvBuffer[3]);
 		}
+		
 		if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitReadAddr)				//等待接收读数据起地址，接收到地址后应答，再等待待读取数据长度
 		{
 			ISP_Conf->ISP_DATA.ReadAddr=addr;														//待读数据的起始地址
@@ -377,6 +378,11 @@ void Usart_ISP_GetAddr(ISP_Conf_TypeDef *ISP_Conf)		//ISP获取写数据起始地址(主机
 		}
 		else if(ISP_Conf->ISP_SLAVE_STATUS==ISP_STATUS_WaitWAddr)			//等待接收写数据地址，接收到地址后应答，再等待待写入的数据
 		{
+			if(ISP_Conf->ISP_DATA.OffsetAddr==0)
+			{
+				ISP_Conf->ISP_DATA.OffsetAddr=addr;
+			}
+		
 			ISP_Conf->ISP_DATA.WriteAddr=addr;													//待写数据的起始地址
 			Usart_ISP_SetSlaveStatus(ISP_Conf,ISP_STATUS_WaitWData);		//设置从机状态--等待接收待写入的数据
 //			ISP_Conf->ISP_SLAVE_STATUS=ISP_STATUS_WaitWData;						//等待接收待写入的数据

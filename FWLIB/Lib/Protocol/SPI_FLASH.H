@@ -100,6 +100,8 @@ typedef struct _SPI_FLASH_INF			//FLASH状态标志
 	
 	unsigned int	SPI_FLASH_WriteAdrr;					//写入地址
 	unsigned int	SPI_FLASH_ReadAdrr;						//读取地址
+	unsigned int	SPI_FLASH_OffsetAdrr;					//偏移地址---一页256字节，用来存储程序信息--长度
+	unsigned int	SPI_FLASH_SumReceived;				//总共接收到的数据个数
 	
 	unsigned int	SPI_FLASH_SectorAdrr;					//扇区地址---擦除扇区时使用
 	unsigned int	SPI_FLASH_BlockAdrr;					//块地址-----块擦除时使用
