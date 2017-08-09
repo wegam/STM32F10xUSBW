@@ -484,19 +484,19 @@ void PWM_OUT2			//PWM输出配置
 		}
 	}	
 	//8)**********定时器初始化
-	TIM_TimeBaseStructure.TIM_Prescaler = 0; 												//设定分频值
-	TIM_TimeBaseStructure.TIM_Period 		= 3600-1;        							//设定自动重装载值
+	TIM_TimeBaseStructure.TIM_Prescaler = TIMx_Prescaler-1; 				//设定分频值
+	TIM_TimeBaseStructure.TIM_Period 		= TIMx_Period-1;        		//设定自动重装载值
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;  				//不分割
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;  		//向上计数
 	TIM_TimeBaseInit(TIMx, &TIM_TimeBaseStructure);		//初始化	
 	//9）定时器配置（初始化*******************************************************************
-//	if((TIMx_Period*(u32)PWM_Ratio)>1000)
-//		PWM_Ratio=(u16)((u32)(TIMx_Period*PWM_Ratio)/1000);
-//	else if(PWM_Ratio!=0)
-//		PWM_Ratio=1;
+	if((TIMx_Period*(u32)PWM_Ratio)>1200)
+		PWM_Ratio=(u16)((u32)(TIMx_Period*PWM_Ratio)/1200);
+	else if(PWM_Ratio!=0)
+		PWM_Ratio=1;
 		
 	TIMOCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; 								//选择定时器模式:TIM脉冲宽度调制模式1
-	TIMOCInitStructure.TIM_Pulse =PWM_Ratio;												//占空比=(CCRx/ARR)*1000%
+	TIMOCInitStructure.TIM_Pulse =(u16)PWM_Ratio;										//占空比=(CCRx/ARR)*1000%
 	TIMOCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;				//输出极性:TIM输出比较极性高
 	TIMOCInitStructure.TIM_OutputState = TIM_OutputState_Enable;		//比较输出使能
 	//10）定时器配置（初始化*******************************************************************

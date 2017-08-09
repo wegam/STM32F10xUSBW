@@ -162,18 +162,18 @@ void Lock_Toggle(void)
 			ct_pmos8=1;
 		
 	}
-	else if(Lock_Toggle_CNT==200)
-	{
-		ct_pmos1=0;
-		ct_pmos2=0;
-		ct_pmos3=0;
-		ct_pmos4=0;
-		ct_pmos5=0;
-		ct_pmos6=0;
-		ct_pmos7=0;
-		ct_pmos8=0;		
-	}
-	else if(Lock_Toggle_CNT>=300)
+//	else if(Lock_Toggle_CNT==200)
+//	{
+//		ct_pmos1=0;
+//		ct_pmos2=0;
+//		ct_pmos3=0;
+//		ct_pmos4=0;
+//		ct_pmos5=0;
+//		ct_pmos6=0;
+//		ct_pmos7=0;
+//		ct_pmos8=0;		
+//	}
+	else if(Lock_Toggle_CNT>=400)
 	{
 		ct_pmos1=0;
 		ct_pmos2=0;
